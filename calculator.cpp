@@ -37,21 +37,22 @@ int getVariable(vector<string> *var)
 bool getMatrix(vector<string>& equ, vector<string>& var, string ** Matrix)
 {
 	string temp;
-	bool flag = false;
+	bool flag1 = false, flag2 = false;
 	int head, cur, equNum = equ.size(), varNum = var.size();
 	for (int i = 0; i < equNum; i++)
 		for (int j = 0; j < varNum + 1; j++)
 			Matrix[i][j] = "0";
 	for (int i = 0; i < equNum; i++)
 	{
-		head = cur = flag = 0;
-		while (!flag)    //未找到"="号
+		head = cur = flag1 = 0;
+		while (!flag1)    //未找到"="号
 		{
 			head = cur++;
+			flag2 = false;
 			while ((equ[i][cur] != '+') && (equ[i][cur] != '-'))
 			{
 				if (equ[i][cur] == '=')
-				{ flag = true; break; }
+				{ flag1 = true; break; }
 				cur++;
 			}
 			temp = equ[i].substr(head, cur - head);
@@ -66,8 +67,16 @@ bool getMatrix(vector<string>& equ, vector<string>& var, string ** Matrix)
 					temp.erase(pos, var[j].size());
 					if (temp == "+" || temp == "-")
 						temp += "1";
-					Matrix[i][j] = temp;
+					Matrix[i][j].append(temp);
+					flag2 = true;
 				}
+			}
+			if (flag2 == false)  //该项在等号左侧且未找到变量
+			{
+				if (temp[0] == '+')
+					temp[0] = '-';
+				else temp[0] = '+';
+				equ[i].append(temp);
 			}
 		}
 		Matrix[i][varNum] = equ[i].substr(++cur);
