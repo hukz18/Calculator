@@ -11,21 +11,10 @@
 
 using namespace std;
 
-class Term           //储存未知数及其系数
-{
-private:
-	string variable;
-	string coefficient;
-public:
-	Term(string &variable, string &coefficient) :variable(variable), coefficient(coefficient) {};
-	Term(const string &variable) :variable(variable), coefficient("1") {};
-	bool operator ==(Term &t2) { return variable == t2.variable; }
-	bool operator <(Term &t2) { return variable < t2.variable; }
-	friend ostream &operator <<(ostream &output, Term &term);
-};
 
 int getEqution(vector <string> *equ);     //获取方程组,返回其总数
-int getVariable(vector <Term> *var);  //获取未知数，返回其总数
-bool getCoefficient(vector <Term> *var, vector <string> &equ);//获取各未知数的系数，返回是否成功,找到各项的开始与结束，erase变量
+int getVariable(vector <string> *var);    //获取未知数，返回其总数
+string simplize(vector <string> *var);    //化简方程式：处理其中的括号和分数等，化为等号左侧为变量，右侧为常量的形式
+bool getMatrix(vector <string> &equ, vector <string> &var, string **Matrix);   //获取系数矩阵，返回是否成功
 
 #endif // !calculator.h
