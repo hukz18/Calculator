@@ -2,6 +2,18 @@
 
 
 
+void exchangeRow(int r1, int r2, int col,double ** Augument)
+{
+	for (int i = 0; i < col; i++)
+		swap(Augument[r1][i], Augument[r2][i]);
+}
+
+bool isZero(double x)
+{
+	if (abs(x) < 1e-5) return true;
+	return false;
+}
+
 //获取方程组,返回其总数
 int getEqution(vector <string> *equ)     
 {
@@ -67,7 +79,7 @@ bool getMatrix(vector<string>& equ, vector<string>& var, string ** Matrix)
 					temp.erase(pos, var[j].size());
 					if (temp == "+" || temp == "-")
 						temp += "1";
-					Matrix[i][j].append(temp);
+					Matrix[i][j]=temp;
 					flag2 = true;
 				}
 			}
@@ -83,4 +95,48 @@ bool getMatrix(vector<string>& equ, vector<string>& var, string ** Matrix)
 	}
 	return true;
 }
+
+bool Elimination(double ** Augument, int equ, int var)
+{
+	int i, j, k, flag = 1;
+	double temp = 0;
+	if (equ < var)
+	{
+		cout << "The equtions are not enough ,please input more equtions and try again!" << endl;
+		return false;
+	}
+	for (k = 0; k < var; k++)
+	{
+		flag = 1;
+		//检查是否可以消元
+		if (isZero(Augument[k][k]))
+		{
+			flag = 0;
+			for (i = k; i < equ; i++)
+				if (!isZero(Augument[i][k]))
+				{
+					exchangeRow(i, k, var + 1, Augument);
+					flag = 1;
+				}
+		}
+		if (!flag) {
+			cout << "The matrix is single,thre's no solution!" << endl;
+			return false;
+		}
+		//将第k行首项划为1
+		temp = Augument[k][k];
+		for (i = k; i <= var; i++)
+			Augument[k][i] /= temp;
+		//将第k列其余系数划为0
+		for (i = 0; i < equ; i++)
+		{
+			if (i == k) continue;
+			temp = Augument[i][k];
+			for (j = k; j <= var; j++)
+				Augument[i][j] -= temp * Augument[k][j];
+		}
+	}
+	return true;
+}
+
 
