@@ -12,7 +12,7 @@ class fraction;
 class monomial             //单项式类
 {
 protected:
-	int coefficient;                      //数字系数
+	double coefficient;                      //数字系数
 	string expression;                    //字母表达式
 public:
 	monomial (string expression);

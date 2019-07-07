@@ -31,10 +31,14 @@ int main(void)
 		}
 		cout << endl;
 	}
-	Elimination(Auguments, equNum, varNum);
-	cout << "The solutions are as follows:" << endl;
-	for (int i = 0; i < varNum; i++)
-		cout << Variable[i] << " = " << Auguments[i][varNum] << ",";
+	if (Elimination(Auguments, equNum, varNum))
+	{
+		cout << "The solutions are as follows:" << endl;
+		for (int i = 0; i < varNum; i++)
+			cout << Variable[i] << " = " << Auguments[i][varNum] << ",";
+	}
 	cout << endl << "Done!" << endl;
+	cin.get();
+	main();
 	return 0;
 }

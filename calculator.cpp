@@ -1,18 +1,35 @@
 #include "calculator.h"
 
+//判断一个字符是否为数字
+bool isNum(char c)
+{
+	if ((c > '0') && (c < '9'))
+		return true;
+	else return false;
+}
 
+//判定一个double数是否为"0"
+bool isZero(double x)
+{
+	if (abs(x) < 1e-5) return true;
+	return false;
+}
 
+//改变一个字符串的"符号"
+void changeSign(string & str)
+{
+	if (str[0] == '+')
+		str[0] = '-';
+	else str[0] = '+';
+}
+
+//交换矩阵的两行元素
 void exchangeRow(int r1, int r2, int col,double ** Augument)
 {
 	for (int i = 0; i < col; i++)
 		swap(Augument[r1][i], Augument[r2][i]);
 }
 
-bool isZero(double x)
-{
-	if (abs(x) < 1e-5) return true;
-	return false;
-}
 
 //获取方程组,返回其总数
 int getEqution(vector <string> *equ)     
@@ -29,6 +46,7 @@ int getEqution(vector <string> *equ)
 	}
 	return equ->size();
 }
+
 //获取未知数，返回其总数，解决重复bug
 int getVariable(vector<string> *var)  
 {
@@ -45,53 +63,64 @@ int getVariable(vector<string> *var)
 	return var->size();
 }
 
-//获取系数矩阵，返回是否成功
+//获取系数矩阵，返回是否成功,包括移项、处理系数为1等feature
 bool getMatrix(vector<string>& equ, vector<string>& var, string ** Matrix)
 {
 	string temp;
 	bool flag1 = false, flag2 = false;
-	int head, cur, equNum = equ.size(), varNum = var.size();
+	int head, cur, pos, length, equNum = equ.size(), varNum = var.size();
+	//初始化，下一步设计mystod时直接空字符串赋值为0，删去这段
 	for (int i = 0; i < equNum; i++)
 		for (int j = 0; j < varNum + 1; j++)
 			Matrix[i][j] = "0";
 	for (int i = 0; i < equNum; i++)
 	{
-		head = cur = flag1 = 0;
-		while (!flag1)    //未找到"="号
+		flag1 = false;
+		head = cur = 0;
+		length = equ[i].length();
+		while (cur < length)    //未到达该等式末尾
 		{
 			head = cur++;
 			flag2 = false;
-			while ((equ[i][cur] != '+') && (equ[i][cur] != '-'))
-			{
-				if (equ[i][cur] == '=')
-				{ flag1 = true; break; }
-				cur++;
-			}
+			while ((equ[i][cur] != '+') && (equ[i][cur] != '-') && (equ[i][cur] != '=') && cur < length) cur++;
 			temp = equ[i].substr(head, cur - head);
-			int pos = 0;           //除去代码中的空格，下一步添到simplify里
+			pos = 0;//除去代码中的空格
 			while ((pos = temp.find(' ', pos)) != string::npos)
+				temp.erase(pos, 1);
+			pos = 0;//除去代码中的乘号(前后均为数字除外)
+			while (((pos = temp.find('*', pos)) != string::npos) && (!((isNum(temp[pos - 1])) && (isNum(temp[pos + 1])))))
 				temp.erase(pos, 1);
 			for (int j = 0; j < varNum; j++)
 			{
 				int pos = temp.find(var[j]);
 				if (pos != string::npos)
 				{
+					flag2 = true;                  //该项含有变量
 					temp.erase(pos, var[j].size());
 					if (temp == "+" || temp == "-")
 						temp += "1";
-					Matrix[i][j]=temp;
-					flag2 = true;
+					if (flag1 == true)             //该项在等号右侧且含有变量
+						changeSign(temp);
+					Matrix[i][j] = temp;
 				}
 			}
-			if (flag2 == false)  //该项在等号左侧且未找到变量
+			if (flag2 == false)  //该项未找到变量
 			{
-				if (temp[0] == '+')
-					temp[0] = '-';
-				else temp[0] = '+';
-				equ[i].append(temp);
+				if (flag1 == false)
+					changeSign(temp);
+				if (Matrix[i][varNum] == "0")
+					Matrix[i][varNum] = temp;
+				else Matrix[i][varNum].append(temp);
+			}
+			if (equ[i][cur] == '=')
+			{
+				flag1 = true; cur++;
+				if ((equ[i][cur] != '-') && (equ[i][cur] != '0'))
+				{
+					equ[i].insert(cur, 1, '+'); length++;
+				}
 			}
 		}
-		Matrix[i][varNum] = equ[i].substr(++cur);
 	}
 	return true;
 }
@@ -100,9 +129,9 @@ bool Elimination(double ** Augument, int equ, int var)
 {
 	int i, j, k, flag = 1;
 	double temp = 0;
-	if (equ < var)
+	if (equ < var)//检查方程是否欠定
 	{
-		cout << "The equtions are not enough ,please input more equtions and try again!" << endl;
+		cout << "The equtions are underdetermined ,please input more equtions and try again!" << endl;
 		return false;
 	}
 	for (k = 0; k < var; k++)
@@ -135,6 +164,21 @@ bool Elimination(double ** Augument, int equ, int var)
 			for (j = k; j <= var; j++)
 				Augument[i][j] -= temp * Augument[k][j];
 		}
+	}
+	if (equ > var)//检查方程是否超定,及是否有解
+	{
+		for (i = var; i < equ; i++)
+		{
+			temp = 0;
+			for (j = 0; j < var; j++)
+				temp += Augument[i][j] * Augument[j][var];
+			if (!isZero(temp - Augument[i][var]))
+			{
+				cout << "The equtions are overdeterminated, and there's no sotion!" << endl;
+				return false;
+			}
+		}
+		cout << "The equtions are overdeterminated, but there's still a sotion!" << endl;
 	}
 	return true;
 }
