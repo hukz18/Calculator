@@ -107,10 +107,12 @@ bool getMatrix(vector<string>& equ, vector<string>& var, string ** Matrix)
 			if (flag2 == false)  //该项未找到变量
 			{
 				if (flag1 == false)
+				{
 					changeSign(temp);
-				if (Matrix[i][varNum] == "0")
-					Matrix[i][varNum] = temp;
-				else Matrix[i][varNum].append(temp);
+					if (Matrix[i][varNum] == "0")
+						Matrix[i][varNum] = temp;
+					else Matrix[i][varNum].append(temp);
+				}
 			}
 			if (equ[i][cur] == '=')
 			{
@@ -180,6 +182,10 @@ bool Elimination(double ** Augument, int equ, int var)
 		}
 		cout << "The equtions are overdeterminated, but there's still a sotion!" << endl;
 	}
+	//让看起来像0的真的变成0
+	for (i = 0; i < equ; i++)
+		if (isZero(Augument[i][var]))
+			Augument[i][var] = 0;
 	return true;
 }
 

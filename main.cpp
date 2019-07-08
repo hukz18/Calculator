@@ -1,10 +1,11 @@
 #include "symbolize.h"
+#include "operation.h"
 #include "calculator.h"
 #include <iomanip>
 
 int main(void)
 {
-	int equNum = 0, varNum = 0;
+	/*int equNum = 0, varNum = 0;
 	double **Auguments;
 	vector<string> Equation;
 	vector<string> Variable;
@@ -39,6 +40,21 @@ int main(void)
 	}
 	cout << endl << "Done!" << endl;
 	cin.get();
+	for (int i = 0; i < equNum; i++)
+	{
+		delete[](Matrix[i]);
+		delete[](Auguments[i]);
+	}
+	delete Matrix;
+	delete Auguments;*/
+	string test;
+	cin >> test;
+	opExpression op(test);
+	cout << test << endl;
+	cout << op.expression << endl;
+	for (int i = 0; i < op.expression.length(); i++)
+		cout << op.priority[i] << " ";
+	cout << endl << "done!" << endl;
 	main();
 	return 0;
 }
