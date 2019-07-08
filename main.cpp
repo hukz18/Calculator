@@ -52,9 +52,12 @@ int main(void)
 	opExpression op(test);
 	cout << test << endl;
 	cout << op.expression << endl;
-	for (int i = 0; i < op.expression.length(); i++)
-		cout << op.priority[i] << " ";
+	for (unsigned int i = 0; i < op.expression.length(); i++)
+		if (op.priority[i] != 1e6)
+			cout << op.priority[i] << " ";
 	cout << endl << "done!" << endl;
+	cout << calculate(op) << endl;
+	
 	main();
 	return 0;
 }
