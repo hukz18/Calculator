@@ -3,9 +3,29 @@
 #include "calculator.h"
 #include <iomanip>
 
-int main(void)
+
+bool testOpe(void)
 {
-	/*int equNum = 0, varNum = 0;
+	cout << "please input the arithmetic expression:" << endl;
+	string test;
+	cin >> test;
+	opExpression op(test);
+	//cout << test << endl;
+
+	/*cout << op.expression << endl;
+	for (unsigned int i = 0; i < op.expression.length(); i++)
+		if (op.priority[i] != 1e6)
+			cout << op.priority[i] << " ";
+	cout << endl << "done!" << endl;*/
+	cout << "the reselt of the expression is:" << endl;
+	cout << calculate(op) << endl;
+	cin.get();
+	return true;
+}
+
+bool testCal(void)
+{
+	int equNum = 0, varNum = 0;
 	double **Auguments;
 	vector<string> Equation;
 	vector<string> Variable;
@@ -46,18 +66,14 @@ int main(void)
 		delete[](Auguments[i]);
 	}
 	delete Matrix;
-	delete Auguments;*/
-	string test;
-	cin >> test;
-	opExpression op(test);
-	cout << test << endl;
-	cout << op.expression << endl;
-	for (unsigned int i = 0; i < op.expression.length(); i++)
-		if (op.priority[i] != 1e6)
-			cout << op.priority[i] << " ";
-	cout << endl << "done!" << endl;
-	cout << calculate(op) << endl;
+	delete Auguments;
+	return true;
+}
+
+int main(void)
+{
 	
+	testOpe();
 	main();
 	return 0;
 }

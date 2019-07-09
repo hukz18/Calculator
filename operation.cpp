@@ -13,7 +13,7 @@ opExpression::opExpression(string & exp)
 			exp.insert(i+1, 1, '*');
 	length = exp.length();                            //开始计算优先级
 	int cur = 0, level = 0;
-	double orderAS = 0, orderMD = 0, orderP = 0;
+	double orderOffset = 0;
 	for (int i = 0; i < length; i++)                  //计算进出括号的层数
 	{
 		if (exp[i] == '(')
@@ -33,22 +33,21 @@ opExpression::opExpression(string & exp)
 		cout << "the \"(\"and\")\"aren't matching,please recheck your input" << endl;
 	for (int i = expression.length() - 1; i >= 0; i--)//计算位置导致的同级运算符的先后调整
 	{
-		if (expression[i] == '+' || expression[i] == '-')
+		if (isOpe(expression[i]))
 		{
-			priority[i] += orderAS;
-			orderAS += 0.001;
-		}
-		if (expression[i] == '*' || expression[i] == '/')
-		{
-			priority[i] += orderMD;
-			orderMD += 0.001;
-		}
-		if (expression[i] == '^')
-		{
-			priority[i] += orderP;
-			orderP += 0.001;
+			priority[i] += orderOffset;
+			orderOffset += 0.001;
 		}
 	}
+}
+
+opExpression::opExpression(opExpression & exp)
+{
+	int length = exp.expression.length();
+	expression = exp.expression;
+	priority = new double[length];
+	for(int i=0;i<length;i++)
+		priority[i] = exp.priority[i];
 }
 
 opExpression::opExpression(opExpression & exp, int begin, int length)
@@ -60,6 +59,12 @@ opExpression::opExpression(opExpression & exp, int begin, int length)
 	for (int i = 0; i < length; i++)
 		priority[i] = exp.priority[i];
 }
+
+opExpression::~opExpression()
+{
+	cout << "deleting" << expression << endl;
+	delete[]this->priority;
+};
 
 
 //以最低优先级的操作符为界，将一段表达式分割为两段
@@ -123,12 +128,6 @@ double calculate(opExpression exp)
 		return 0;
 	else return stod(exp.expression);
 }
-
-opExpression::~opExpression()
-{
-	//cout << "deleting" << expression << endl;
-	//delete[]this->priority;
-};
 
 
 

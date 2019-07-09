@@ -14,6 +14,7 @@ public:
 	double *priority;
 	opExpression() {};
 	opExpression(string &exp);
+	opExpression(opExpression &exp);
 	opExpression(opExpression &exp, int begin, int length = 0);
 	~opExpression();
 };
