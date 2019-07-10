@@ -3,7 +3,6 @@
 #include "calculator.h"
 #include <iomanip>
 
-
 bool testOpe(void)
 {
 	cout << "please input the arithmetic expression:" << endl;
@@ -72,8 +71,10 @@ bool testCal(void)
 
 int main(void)
 {
-	
-	testOpe();
-	main();
+	string x = "3.6a^2ba^3cd";
+	string y = "7.3bca^2d";
+	monomial test(x), text(y);
+	monomial result= test*text;
+	cout << result;
 	return 0;
 }
