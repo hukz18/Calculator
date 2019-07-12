@@ -71,10 +71,14 @@ bool testCal(void)
 
 int main(void)
 {
-	string x = "3.6a^2ba^3cd";
-	string y = "7.3bca^2d";
+	string x = "3.6ba^3c^-1d";
+	string y = "7.3agca^2d";
 	monomial test(x), text(y);
 	monomial result= test*text;
-	cout << result;
+	cout << test << endl;
+	cout << text << endl;
+	cout << result << endl;
+	polynomial z = test + text;
+	cout << x;
 	return 0;
 }

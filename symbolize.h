@@ -1,17 +1,25 @@
 #ifndef symbolize
 #define symbolize
-//需要isZero吗
 #include <string>
 #include <vector>
 #include <iostream>//输出几个提醒
+#include <algorithm>
+
 using namespace std;
 class monomial;
 class polynomial;
 class fraction;
  
+int getPower(string const &str, int pos);
+int getPower(string const &str, char var);
+bool changePower(string &str, int pos, int power);
+bool changePower(string &str, char var, int power);
+
+double getGCF(double a, double b);   //若实为整数则返回最大公因数
+
 class monomial             //单项式类
 {
-protected:
+private:
 	double coefficient;                      //数字系数
 	string expression;                    //字母表达式
 public:
@@ -19,6 +27,7 @@ public:
 	monomial (string &expression);
 	monomial (int coefficient, string &expression) :coefficient(coefficient), expression(expression) {};
 	monomial (monomial const &m) :coefficient(m.coefficient), expression(m.expression) {};
+	void arrange(void); //将表达式按字母升序排列
 	polynomial operator + (monomial const &m2) const;  //重载单项式加法
 	polynomial operator - (monomial const &m2) const;  //重载单项式减法
 	monomial operator * (monomial const &m2) const;    //重载单项式乘法，未重载与系数相加
@@ -28,7 +37,7 @@ public:
 
 class polynomial : public monomial          //多项式类,公有继承单项式类作为公因式
 {
-protected:
+public:
 	int termNumber;
 	vector<monomial> terms;
 public:
@@ -41,6 +50,7 @@ public:
 	fraction operator /(polynomial const &p2) const;     //重载多项式除法
 	polynomial factorize(void);              //分解因式
 	polynomial comfactorize(void);           //提取公因式
+	friend ostream &operator <<(ostream &output, polynomial const &m);
 };
 
 class fraction : public polynomial             //分式类，公有继承多项式类作为整式部分

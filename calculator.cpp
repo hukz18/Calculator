@@ -1,3 +1,4 @@
+#include "tool.h"
 #include "calculator.h"
 
 //判断一个字符是否为数字
@@ -8,12 +9,6 @@ bool isNum(char c)
 	else return false;
 }
 
-//判定一个double数是否为"0"
-bool isZero(double x)
-{
-	if (abs(x) < 1e-5) return true;
-	return false;
-}
 
 //改变一个字符串的"符号"
 void changeSign(string & str)
@@ -188,5 +183,3 @@ bool Elimination(double ** Augument, int equ, int var)
 			Augument[i][var] = 0;
 	return true;
 }
-
-

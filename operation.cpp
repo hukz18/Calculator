@@ -150,5 +150,3 @@ int prior(char c)
 	default:return 1e6; //该字符为数字则设为最大优先级，避免在数字处分段
 	}
 }
-
-
