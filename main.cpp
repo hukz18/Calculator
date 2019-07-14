@@ -1,3 +1,4 @@
+#include "tools.h"
 #include "symbolize.h"
 #include "operation.h"
 #include "calculator.h"
@@ -69,16 +70,17 @@ bool testCal(void)
 	return true;
 }
 
+//记得最后删去cout语句
+
 int main(void)
 {
-	string x = "3.6ba^3c^-1d";
-	string y = "7.3agca^2d";
-	monomial test(x), text(y);
-	monomial result= test*text;
-	cout << test << endl;
-	cout << text << endl;
-	cout << result << endl;
-	polynomial z = test + text;
-	cout << x;
+	
+
+	monomial x("ca^2"), y("ba^3c^-1"), z("a^2bc^2");
+	polynomial p1 = x + y + z, p2 = y + z;
+	//polynomial p3 = p1 * p2;
+
+	
+	
 	return 0;
 }

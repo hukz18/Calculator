@@ -3,7 +3,6 @@
 
 #define maxLength 80
 
-#include <map>
 #include <vector>
 #include <string>
 #include <algorithm>
@@ -11,8 +10,8 @@
 using namespace std;
 
 //Kits
-bool isNum(char c);         //判定一个字符是否为数字
-void changeSign(string & str);            //改变一个字符串的"符号"
+
+
 void exchangeRow(int r1, int r2, int col, double **Augument);      //交换矩阵的两行元素
 
 

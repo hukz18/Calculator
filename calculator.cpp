@@ -1,22 +1,10 @@
-#include "tool.h"
+#include "tools.h"
 #include "calculator.h"
 
-//判断一个字符是否为数字
-bool isNum(char c)
-{
-	if ((c > '0') && (c < '9'))
-		return true;
-	else return false;
-}
 
 
-//改变一个字符串的"符号"
-void changeSign(string & str)
-{
-	if (str[0] == '+')
-		str[0] = '-';
-	else str[0] = '+';
-}
+
+
 
 //交换矩阵的两行元素
 void exchangeRow(int r1, int r2, int col,double ** Augument)
@@ -83,7 +71,7 @@ bool getMatrix(vector<string>& equ, vector<string>& var, string ** Matrix)
 			while ((pos = temp.find(' ', pos)) != string::npos)
 				temp.erase(pos, 1);
 			pos = 0;//除去代码中的乘号(前后均为数字除外)
-			while (((pos = temp.find('*', pos)) != string::npos) && (!((isNum(temp[pos - 1])) && (isNum(temp[pos + 1])))))
+			while (((pos = temp.find('*', pos)) != string::npos) && (!((isdigit(temp[pos - 1])) && (isdigit(temp[pos + 1])))))
 				temp.erase(pos, 1);
 			for (int j = 0; j < varNum; j++)
 			{
@@ -122,6 +110,7 @@ bool getMatrix(vector<string>& equ, vector<string>& var, string ** Matrix)
 	return true;
 }
 
+//高斯消元法处理增广系数矩阵
 bool Elimination(double ** Augument, int equ, int var)
 {
 	int i, j, k, flag = 1;
@@ -159,7 +148,7 @@ bool Elimination(double ** Augument, int equ, int var)
 			if (i == k) continue;
 			temp = Augument[i][k];
 			for (j = k; j <= var; j++)
-				Augument[i][j] -= temp * Augument[k][j];
+				Augument[i][j] += -1*temp * Augument[k][j];
 		}
 	}
 	if (equ > var)//检查方程是否超定,及是否有解

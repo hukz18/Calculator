@@ -1,81 +1,6 @@
-#include "tool.h"
+#include "tools.h"
 #include "symbolize.h"
 
-
-double getGCF(double a, double b)
-{
-	int i,x = a, y = b, gcf = 1, m = min(x, y);
-	if (!isZero(a - x)) return 1;
-	if (!isZero(b - y)) return 1;
-	for (i = 1; i <= m; i++)
-		if ((!(x%i)) && (!(y%i))) gcf = i;
-	return i;
-}
-
-int getPower(string const & str, int pos)
-{
-	if(!isalpha(str[pos])) return 0;
-	if (str[pos + 1] == '^')
-		return stoi(str.substr(pos + 2));
-	else return 1;
-}
-
-int getPower(string const & str, char var)
-{
-	int pos = str.find(string(1, var));
-	if (pos == string::npos) return 0;
-	else if (str[pos + 1] != '^') return 1;
-	else return stoi(str.substr(pos + 2));
-}
-
-bool changePower(string & str, int pos, int target)
-{
-	int power = getPower(str, pos);
-	if (target == 0)
-		if (power == 1) str.erase(pos, 1);
-		else
-		{
-			str.erase(pos, 3);//将可能的符号也删去
-			while (isdigit(str[pos])) str.erase(pos, 1);
-		}
-	else if (target == 1)
-	{
-		if (power == 1) return true;
-		str.erase(pos + 1, 2);
-		while (isdigit(str[pos + 1])) str.erase(pos + 1, 1);
-	}
-	else
-	{
-		if (power == 1)
-		{
-			str.insert(pos+1, 1, '^');
-			str.insert(pos + 2, to_string(target));
-		}
-		else
-		{
-			str.erase(pos + 2, 1);
-			while (isdigit(str[pos + 2])) str.erase(pos + 2, 1);
-			str.insert(pos + 2, to_string(target));
-		}
-	}
-	return true;
-}
-
-bool changePower(string & str, char var, int target)
-{
-	int pos = str.find(string(1, var));
-	if (pos != string::npos)
-		return(changePower(str, pos, target));
-	else if (target == 0) return true;
-	else if (target == 1) str.append(1, var);
-	else
-	{
-		str.append(1, var);
-		str.append(1, '^');
-		str.append(to_string(target));
-	}
-	return true;
-}
 
 
 
@@ -104,7 +29,7 @@ void monomial::arrange(void)
 }
 
 //从字符串构造单项式并合并指数
-monomial::monomial(string &exp)
+monomial::monomial(string const &exp)
 {
 	string expression;
 	int power0, power1, length = exp.length();
@@ -122,35 +47,26 @@ monomial::monomial(string &exp)
 	this->arrange();
 }
 
-
+/*单项式部分*/
+//重载单项式互加
 polynomial monomial::operator+(monomial const & m2) const
 {
 	polynomial result;
-	monomial p1 = *this, p2 = m2;
-	int m,power1, power2, length = expression.length();
-	result.termNumber = 2;
-	result.coefficient = getGCF(p1.coefficient, p2.coefficient);
-	p1.coefficient /= result.coefficient;
-	p2.coefficient /= result.coefficient;
-	for(int i=0;i<length;i++)
-		if(power1=getPower(p1.expression,i))
-			if (power2 = getPower(p2.expression, p1.expression[i]))
-			{
-				m = min(power1, power2);
-				changePower(result.expression, p1.expression[i], m);
-				changePower(p1.expression, i, power1 - m);
-				changePower(p2.expression, p1.expression[i], power2 - m);
-			}
-	result.terms.push_back(p1);
-	result.terms.push_back(p2);
+	if (expression == m2.expression)
+	{
+		result.termNumber = 1;
+		result.terms.push_back(monomial(coefficient + m2.coefficient, expression));
+	}
+	else
+	{
+		result.termNumber = 2;
+		result.terms.push_back(*this);
+		result.terms.push_back(m2);
+	}
 	return result;
 }
 
-polynomial monomial::operator-(monomial const & m2) const
-{
-	return polynomial();
-}
-
+//重载单项式互乘
 monomial monomial::operator*(monomial const & m2) const
 {
 	monomial result;
@@ -169,8 +85,7 @@ monomial monomial::operator*(monomial const & m2) const
 	return result;
 }
 
-
-
+//重载单项式输出
 ostream & operator<<(ostream & output,monomial const & m)
 {
 	output << m.coefficient << m.expression;
@@ -178,3 +93,95 @@ ostream & operator<<(ostream & output,monomial const & m)
 }
 
 
+
+
+
+
+
+
+/*多项式部分*/
+//提取公因式
+void polynomial::extractCom(void)
+{
+	bool flag = true;
+	int *power = new int[termNumber], copower;
+	double *coeff = new double[termNumber];
+	for (int i = 0; i < termNumber; i++)
+		coeff[i] = terms[i].coefficient;
+	coefficient = getGCF(coeff, termNumber);
+	for (int i = 0; i < termNumber; i++)
+		terms[i].coefficient /= coefficient;
+	for (int i = 0; i < terms[0].expression.length(); i++)
+		if (power[0] = getPower(terms[0].expression, i))
+		{
+			flag = true;
+			for (int j = 1; j < termNumber; j++)
+				if (!(power[j] = getPower(terms[j].expression, terms[0].expression[i]))) flag = false;
+			if (flag == true)
+			{
+				copower = *min_element(power, power+termNumber);
+				changePower(expression, terms[0].expression[i], copower);
+				for (int j = 1; j < termNumber; j++)
+					changePower(terms[j].expression, terms[0].expression[i], power[j] - copower);
+				changePower(terms[0].expression, i--, power[0] - copower);
+			}
+		}
+}
+
+//改变多项式每项符号用于处理减法
+void polynomial::changeSign(void)
+{
+	for (int i = 0; i < termNumber; i++)
+		terms[i].coefficient *= -1;
+}
+
+
+//重载多项式互加
+polynomial polynomial::operator+(polynomial const & p2) const
+{
+	if (p2.coefficient != 1||p2.expression!="")
+		 cout << "polynomial plus error:having common factor";
+	polynomial result = *this;
+	result.termNumber += p2.termNumber;
+	for (int i = 0; i < p2.termNumber; i++)
+		result.terms.push_back(p2.terms[i]);
+	return result;
+}
+
+//重载多项式互乘
+polynomial polynomial::operator*(polynomial const & p2) const
+{
+	polynomial result;
+	if (p2.coefficient != 1 || p2.expression != "")
+		 cout << "polynomial multiply error:having common factor";
+	for (int i = 0; i < termNumber; i++)
+		for (int j = 0; j < p2.termNumber; j++)
+			result = result + terms[i] * p2.terms[j];
+}
+
+/*混合运算部分*/
+//重载单项式加多项式
+polynomial operator+(monomial const & m, polynomial const & p)
+{
+	polynomial result(p);
+	for (int i = 0; i < result.termNumber; i++)
+		if (m.expression == result.terms[i].expression)
+		{
+			result.terms[i].coefficient;
+			return result;
+		}
+	result.termNumber++;
+	result.terms.push_back(m);
+	return result;
+}
+
+//重载单项式乘多项式
+polynomial operator*(monomial const & m, polynomial const & p)
+{
+	polynomial result;
+	result.termNumber = p.termNumber;
+	if(p.coefficient!=1||p.expression!="")
+		 cout << "monomial&polynomial multiply error : having common factor";
+	for (int i = 0; i < p.termNumber; i++)
+		result.terms.push_back(m*p.terms[i]);
+}
