@@ -1,3 +1,4 @@
+#include "tools.h"
 #include "operation.h"
 
 
@@ -126,7 +127,7 @@ double calculate(opExpression exp)
 	}
 	else if (exp.expression.empty())
 		return 0;
-	else return stod(exp.expression);
+	else return myStod(exp.expression);
 }
 
 

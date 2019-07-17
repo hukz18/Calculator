@@ -3,8 +3,8 @@
 
 
 
-
-//将表达式按字母升序排列
+/*单项式部分*/
+//将单项式字母按升序排列
 void monomial::arrange(void)
 {
 	string temp;
@@ -33,7 +33,7 @@ monomial::monomial(string const &exp)
 {
 	string expression;
 	int power0, power1, length = exp.length();
-	coefficient = stod(exp);
+	coefficient = myStod(exp);
 	for (int i = 0; i < length; i++)
 	{
 		if (power1 = getPower(exp, i))
@@ -47,7 +47,6 @@ monomial::monomial(string const &exp)
 	this->arrange();
 }
 
-/*单项式部分*/
 //重载单项式互加
 polynomial monomial::operator+(monomial const & m2) const
 {
@@ -71,16 +70,7 @@ monomial monomial::operator*(monomial const & m2) const
 {
 	monomial result;
 	result.coefficient = coefficient * m2.coefficient;
-	result.expression = expression;
-	int power0, power1;
-	int length1 = expression.length();
-	int length2 = m2.expression.length();
-	for (int i = 0; i < length2; i++)
-		if (power1 = getPower(m2.expression, i))
-		{
-			power0 = getPower(result.expression, m2.expression[i]);
-			changePower(result.expression, m2.expression[i], power0 + power1);
-		}
+	result.expression = multiply(expression, m2.expression);
 	result.arrange();
 	return result;
 }
@@ -88,7 +78,8 @@ monomial monomial::operator*(monomial const & m2) const
 //重载单项式输出
 ostream & operator<<(ostream & output,monomial const & m)
 {
-	output << m.coefficient << m.expression;
+	if (m.coefficient == 1) output << m.expression;
+	else output << m.coefficient << m.expression;
 	return output;
 }
 
@@ -100,8 +91,9 @@ ostream & operator<<(ostream & output,monomial const & m)
 
 
 /*多项式部分*/
+
 //提取公因式
-void polynomial::extractCom(void)
+void polynomial::extraction(void)
 {
 	bool flag = true;
 	int *power = new int[termNumber], copower;
@@ -128,6 +120,20 @@ void polynomial::extractCom(void)
 		}
 }
 
+//多项式展开
+void polynomial::expansion(void)
+{
+	if (expression != "" || coefficient != 1)
+	{
+		for (int i = 0; i < termNumber; i++)
+		{
+			terms[i].coefficient *= coefficient;
+			terms[i].expression = multiply(terms[i].expression, expression);
+		}
+		expression.erase(); coefficient = 1;
+	}
+}
+
 //改变多项式每项符号用于处理减法
 void polynomial::changeSign(void)
 {
@@ -135,16 +141,12 @@ void polynomial::changeSign(void)
 		terms[i].coefficient *= -1;
 }
 
-
 //重载多项式互加
 polynomial polynomial::operator+(polynomial const & p2) const
 {
-	if (p2.coefficient != 1||p2.expression!="")
-		 cout << "polynomial plus error:having common factor";
-	polynomial result = *this;
-	result.termNumber += p2.termNumber;
+	polynomial result(*this);
 	for (int i = 0; i < p2.termNumber; i++)
-		result.terms.push_back(p2.terms[i]);
+		result = result + p2.terms[i];
 	return result;
 }
 
@@ -152,12 +154,32 @@ polynomial polynomial::operator+(polynomial const & p2) const
 polynomial polynomial::operator*(polynomial const & p2) const
 {
 	polynomial result;
-	if (p2.coefficient != 1 || p2.expression != "")
-		 cout << "polynomial multiply error:having common factor";
 	for (int i = 0; i < termNumber; i++)
 		for (int j = 0; j < p2.termNumber; j++)
 			result = result + terms[i] * p2.terms[j];
+	return result;
 }
+
+//重载多项式输出
+ostream & operator<<(ostream & output, polynomial const & p)
+{
+	monomial const &m = p;
+	if (m.expression != "")
+		output << m << " (";
+	output << p.terms[0] << " ";
+	for (int i = 1; i < p.termNumber; i++)
+	{
+		if (p.terms[i].coefficient > 0) cout << "+" << p.terms[i] << " ";
+		else cout << p.terms[i] << " ";
+	}
+	if (m.expression != "")
+	cout << ")";
+	return output;
+}
+
+
+
+
 
 /*混合运算部分*/
 //重载单项式加多项式
@@ -167,14 +189,14 @@ polynomial operator+(monomial const & m, polynomial const & p)
 	for (int i = 0; i < result.termNumber; i++)
 		if (m.expression == result.terms[i].expression)
 		{
-			result.terms[i].coefficient;
+			result.terms[i].coefficient+=m.coefficient;
 			return result;
 		}
 	result.termNumber++;
 	result.terms.push_back(m);
 	return result;
 }
-
+polynomial operator +(polynomial const &p, monomial const &m) { return m + p; }
 //重载单项式乘多项式
 polynomial operator*(monomial const & m, polynomial const & p)
 {
@@ -184,4 +206,8 @@ polynomial operator*(monomial const & m, polynomial const & p)
 		 cout << "monomial&polynomial multiply error : having common factor";
 	for (int i = 0; i < p.termNumber; i++)
 		result.terms.push_back(m*p.terms[i]);
+	return result;
 }
+polynomial operator *(polynomial const &p, monomial const &m) { return m * p; }
+
+

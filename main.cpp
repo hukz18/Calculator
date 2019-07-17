@@ -47,7 +47,7 @@ bool testCal(void)
 	{
 		for (int j = 0; j < varNum + 1; j++)
 		{
-			Auguments[i][j] = stod(Matrix[i][j]);
+			Auguments[i][j] = myStod(Matrix[i][j]);
 			cout << setw(4) << Auguments[i][j] << " ";
 		}
 		cout << endl;
@@ -70,17 +70,16 @@ bool testCal(void)
 	return true;
 }
 
-//记得最后删去cout语句
+//使用声明基类的方式改善多项式及分式
 
 int main(void)
 {
-	
-
 	monomial x("ca^2"), y("ba^3c^-1"), z("a^2bc^2");
-	polynomial p1 = x + y + z, p2 = y + z;
-	//polynomial p3 = p1 * p2;
-
-	
-	
+	polynomial p1 =  y + z, p2 = x + y + z;
+	polynomial p3 = p1 * p2;
+	p3.extraction();
+	p3.expansion();
+	cout << p3 << endl;
+	cout << "done!" << endl;
 	return 0;
 }

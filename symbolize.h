@@ -26,9 +26,9 @@ public:
 	virtual void changeSign(void) { coefficient *= -1; }                 //改变单项式符号,用于处理减法
 	polynomial operator + (monomial const &m2) const;                    //重载单项式互加
 	friend polynomial operator +(monomial const &m, polynomial const &p);//重载单项式加多项式
-	friend polynomial operator +(polynomial const &p, monomial const &m) { return m + p; }//重载多项式加单项式
+	friend polynomial operator +(polynomial const &p, monomial const &m);
 	friend polynomial operator *(monomial const &m, polynomial const &p);//重载单项式乘多项式
-	friend polynomial operator *(polynomial const &p, monomial const &m) { return m * p; }//重载多项式乘单项式
+	friend polynomial operator *(polynomial const &p, monomial const &m);
 	monomial operator * (monomial const &m2) const;    //重载单项式互乘，未重载与系数相乘
 	fraction operator / (monomial const &m2) const;    //重载单项式互除
 	friend ostream &operator <<(ostream &output, monomial const &m);//重载单项式输出
@@ -45,15 +45,16 @@ public:
 	polynomial(monomial &coefficient, int termNumber, vector<monomial> &terms) :monomial(coefficient), termNumber(termNumber), terms(terms) {};   //考虑如何设置系数缺省值为1
 	virtual void changeSign(void);//改变多项式符号
 	polynomial operator +(polynomial const &p2) const;   //重载多项式互加
-	friend polynomial operator +(monomial const &m, polynomial const &p);//重载单项式加多项式
-	friend polynomial operator +(polynomial const &p, monomial const &m);//重载多项式加单项式
-	friend polynomial operator *(monomial const &m, polynomial const &p);//重载单项式乘多项式
-	friend polynomial operator *(polynomial const &p, monomial const &m);//重载多项式乘单项式
+	friend polynomial operator +(monomial const &m, polynomial const &p);//重载多项式加单项式
+	friend polynomial operator +(polynomial const &p, monomial const &m);
+	friend polynomial operator *(monomial const &m, polynomial const &p);//重载多项式乘单项式
+	friend polynomial operator *(polynomial const &p, monomial const &m);
 	polynomial operator *(polynomial const &p2) const;   //重载多项式互乘
 	fraction operator /(polynomial const &p2) const;     //重载多项式互除
 	polynomial factorize(void);              //分解因式
-	void extractCom(void);           //提取公因式
-	friend ostream &operator <<(ostream &output, polynomial const &m);
+	void extraction(void);                   //提取公因式
+	void expansion(void);                    //多项式展开
+	friend ostream &operator <<(ostream &output, polynomial const &p);
 };
 
 class fraction : public polynomial             //分式类，公有继承多项式类作为整式部分

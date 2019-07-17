@@ -7,6 +7,13 @@ bool isZero(double x)
 	return false;
 }
 
+//修正系数为1时stod函数的bug
+double myStod(string const & str)
+{
+	if (!isdigit(str[0])) return 1;
+	else return stod(str);
+}
+
 //若均为整数则返回最大公因数
 double getGCF(double *a,int n)
 {
@@ -36,6 +43,7 @@ void changeSign(string & str)
 	else str.insert(0,1, '-');
 }
 
+//获取str[pos]的幂次
 int getPower(string const & str, int pos)
 {
 	if (!isalpha(str[pos])) return 0;
@@ -44,6 +52,7 @@ int getPower(string const & str, int pos)
 	else return 1;
 }
 
+//获取str中(首个)字符var的幂次
 int getPower(string const & str, char var)
 {
 	int pos = str.find(string(1, var));
@@ -52,6 +61,7 @@ int getPower(string const & str, char var)
 	else return stoi(str.substr(pos + 2));
 }
 
+//改变str[pos]的幂次
 bool changePower(string & str, int pos, int target)
 {
 	int power = getPower(str, pos);
@@ -85,6 +95,7 @@ bool changePower(string & str, int pos, int target)
 	return true;
 }
 
+//改变str中(首个)字符var的幂次
 bool changePower(string & str, char var, int target)
 {
 	int pos = str.find(string(1, var));
@@ -101,3 +112,18 @@ bool changePower(string & str, char var, int target)
 	return true;
 }
 
+//两个字符串表达式相"乘"
+string multiply(string const& str1, string const& str2)
+{
+	string result = str1;
+	int power1, power2;
+	int length1 = str1.length();
+	int length2 = str2.length();
+	for (int i = 0; i < length2; i++)
+		if (power2 = getPower(str2, i))
+		{
+			power1 = getPower(result, str2[i]);
+			changePower(result, str2[i], power1 + power2);
+		}
+	return result;
+}
