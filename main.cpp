@@ -74,12 +74,9 @@ bool testCal(void)
 
 int main(void)
 {
-	monomial x("ca^2"), y("ba^3c^-1"), z("a^2bc^2");
-	polynomial p1 =  y + z, p2 = x + y + z;
-	polynomial p3 = p1 * p2;
-	p3.extraction();
-	p3.expansion();
-	cout << p3 << endl;
-	cout << "done!" << endl;
+	monomial x("a^2"), y("-2ab"), z("b^2");
+	polynomial p1 = x + y + z, p2 = x + y.changeSign() + z;
+	fraction f1 = p1 / p2, f2 = p2 / p1;
+	cout << f1<<endl<<"+"<<endl<<f2<<endl<<"="<<endl<<f1+f2 << endl;
 	return 0;
 }

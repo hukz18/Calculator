@@ -10,7 +10,7 @@ bool isZero(double x)
 //修正系数为1时stod函数的bug
 double myStod(string const & str)
 {
-	if (!isdigit(str[0])) return 1;
+	if (!(isdigit(str[0])||str[0]=='-'||str[0]=='+')) return 1;
 	else return stod(str);
 }
 
@@ -55,7 +55,7 @@ int getPower(string const & str, int pos)
 //获取str中(首个)字符var的幂次
 int getPower(string const & str, char var)
 {
-	int pos = str.find(string(1, var));
+	int pos = str.find(var);
 	if (pos == string::npos) return 0;
 	else if (str[pos + 1] != '^') return 1;
 	else return stoi(str.substr(pos + 2));
@@ -98,7 +98,7 @@ bool changePower(string & str, int pos, int target)
 //改变str中(首个)字符var的幂次
 bool changePower(string & str, char var, int target)
 {
-	int pos = str.find(string(1, var));
+	int pos = str.find(var);
 	if (pos != string::npos)
 		return(changePower(str, pos, target));
 	else if (target == 0) return true;
