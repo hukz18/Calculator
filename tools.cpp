@@ -61,6 +61,17 @@ int getPower(string const & str, char var)
 	else return stoi(str.substr(pos + 2));
 }
 
+//获取两组变量中共有变量，若无则返回'\0'
+char getComVar(vector<char> const& v1, vector<char> const& v2)
+{
+	for (auto iter1 = v1.begin(); iter1 < v1.end(); iter1++)
+	{
+		for (auto iter2 = v2.begin(); iter2 < v2.end(); iter2++)
+			if ((*iter1) == (*iter2)) return (*iter1);
+	}
+	return '\0';
+}
+
 //改变str[pos]的幂次
 bool changePower(string & str, int pos, int target)
 {

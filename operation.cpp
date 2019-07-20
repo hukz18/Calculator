@@ -32,7 +32,8 @@ opExpression::opExpression(string & exp)
 	}
 	if (level)
 		cout << "the \"(\"and\")\"aren't matching,please recheck your input" << endl;
-	for (int i = expression.length() - 1; i >= 0; i--)//计算位置导致的同级运算符的先后调整
+	/*计算位置导致的同级运算符的先后调整*/
+	for (int i = expression.length() - 1; i >= 0; i--)
 	{
 		if (isOpe(expression[i]))
 		{
@@ -42,6 +43,7 @@ opExpression::opExpression(string & exp)
 	}
 }
 
+//复制构造：深复制
 opExpression::opExpression(opExpression & exp)
 {
 	int length = exp.expression.length();
@@ -51,6 +53,7 @@ opExpression::opExpression(opExpression & exp)
 		priority[i] = exp.priority[i];
 }
 
+//截取一部分优先级表达式
 opExpression::opExpression(opExpression & exp, int begin, int length)
 {
 	if(length)//!=0
@@ -61,6 +64,7 @@ opExpression::opExpression(opExpression & exp, int begin, int length)
 		priority[i] = exp.priority[i];
 }
 
+//析构并释放内存
 opExpression::~opExpression()
 {
 	cout << "deleting" << expression << endl;
@@ -130,8 +134,7 @@ double calculate(opExpression exp)
 	else return myStod(exp.expression);
 }
 
-
-
+//判断一个字符是否为运算符
 bool isOpe(char c)
 {
 	if (c == '+' || c == '-' || c == '*' || c == '/' || c == '^')
@@ -139,6 +142,7 @@ bool isOpe(char c)
 	else return false;
 }
 
+//判断一个字符(运算符)的优先级
 int prior(char c)
 {
 	switch (c)

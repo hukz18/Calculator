@@ -70,13 +70,13 @@ bool testCal(void)
 	return true;
 }
 
-//使用声明基类的方式改善多项式及分式
-
+//写factorize,重载等于来改写trySymplize,每次操作完调用tryfactorize,注意monomial的指数可能为负带来的问题
+//所有的互加,互乘都写成分式的互加互乘!!!,也解决负指数问题
 int main(void)
 {
-	monomial x("a^2"), y("-2ab"), z("b^2");
-	polynomial p1 = x + y + z, p2 = x + y.changeSign() + z;
-	fraction f1 = p1 / p2, f2 = p2 / p1;
-	cout << f1<<endl<<"+"<<endl<<f2<<endl<<"="<<endl<<f1+f2 << endl;
+	monomial x("a^2"), y("2ab"), z("b^2"), a("a"), b("b");
+	polynomial p1 = x + y , p2 = x;
+	fraction f1 = p1 / p2;
+	cout << f1 << endl;
 	return 0;
 }

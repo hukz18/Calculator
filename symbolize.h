@@ -23,9 +23,13 @@ public:
 	monomial (string const &expression);
 	monomial (int coefficient, string const &expression) :coefficient(coefficient), expression(expression) {};
 	monomial (monomial const &m) :coefficient(m.coefficient), expression(m.expression) {};
-	void arrange(void); //将表达式按字母升序排列
-	monomial changeSign(void) { coefficient *= -1; return *this; }                 //改变单项式符号,用于处理减法
+	void arrange(void);                     //将表达式按字母升序排列
+	monomial getCoeff(char var) const;            //获取其中某个字母的系数
+	monomial changeSign(void) const{ monomial result(*this); result.coefficient *= -1; return result; }                 //改变单项式符号,用于处理减法
 	polynomial operator + (monomial const &m2) const;                              //重载单项式互加
+	monomial operator * (monomial const &m2) const;                                //重载单项式互乘，未重载与系数相乘
+	monomial operator / (monomial const &m2) const;                                //重载单项式互除
+	friend ostream &operator <<(ostream &output, monomial const &m);               //重载单项式输出
 	/*单项式多项式混合运算*/
 	friend polynomial operator +(monomial const &m, polynomial const &p);          //重载单项式加多项式
 	friend polynomial operator +(polynomial const &p, monomial const &m);
@@ -33,9 +37,12 @@ public:
 	friend polynomial operator *(polynomial const &p, monomial const &m);
 	friend fraction operator /(monomial const &m, polynomial const &p);            //重载单项式除以多项式
 	friend polynomial operator /(polynomial const &p, monomial const &m);          //重载多项式除以单项式
-	monomial operator * (monomial const &m2) const;    //重载单项式互乘，未重载与系数相乘
-	monomial operator / (monomial const &m2) const;    //重载单项式互除
-	friend ostream &operator <<(ostream &output, monomial const &m);               //重载单项式输出
+	friend fraction operator +(monomial const &m, fraction const &f);              //重载单项式加分式
+	friend fraction operator +(fraction const &f, monomial const &m);
+	friend fraction operator *(monomial const &m, fraction const &f);              //重载单项式加分式
+	friend fraction operator *(fraction const &f, monomial const &m);
+	friend fraction operator /(monomial const &m, fraction const &f);              //重载单项式除以分式
+	friend fraction operator /(fraction const &f, monomial const &m);              //重载分式除以单项式
 };
 
 class polynomial : public monomial          //多项式类,公有继承单项式类作为公因式
@@ -45,16 +52,19 @@ public:
 	vector<monomial> terms;
 public:
 	polynomial() {};
-	polynomial(string &expression);//先不急着写,也许用不到
+	polynomial(monomial &m) { termNumber = 1; terms.push_back(m); }  //从单项式构造多项式,项数为1
 	polynomial(monomial &coefficient, int termNumber, vector<monomial> &terms) :monomial(coefficient), termNumber(termNumber), terms(terms) {};   //考虑如何设置系数缺省值为1
 	virtual bool isZero(void);
-	polynomial changeSign(void);   
-	int getLength(void) const;    //获取输出后字符串的长度
-	void factorize(void);                    //分解因式
+	int getLength(void) const;             //获取输出后字符串的长度
+	polynomial getConst(char var) const;   //获取对某字母而言的常数项
+	polynomial getCoeff(char var, int power) const; //获取对某字母而言最高次幂的系数项
+	vector<char> getVar(void) const;       //获取多项式中所含字母
+	polynomial changeSign(void) const;
+	vector<polynomial> factorize(char var) const;        //递归地分解因式
 	polynomial extraction(void) const;                   //提取公因式
 	polynomial expansion(void) const;                    //多项式展开
 	void orderBy(char a);                    //按字符a降幂排序
-	polynomial substitution(char a, char b) const;       //代入并消除同类项
+	polynomial substitution(char var, polynomial value) const;       //代入并消除同类项
 	polynomial operator +(polynomial const &p2) const;   //重载多项式互加
 	polynomial operator *(polynomial const &p2) const;   //重载多项式互乘
 	fraction operator /(polynomial const &p2) const;     //重载多项式互除
@@ -65,8 +75,12 @@ public:
 	friend polynomial operator *(polynomial const &p, monomial const &m);
 	friend fraction operator /(monomial const &m, polynomial const &p);            //重载单项式除以多项式
 	friend polynomial operator /(polynomial const &p, monomial const &m);          //重载多项式除以单项式
-
-	
+	friend fraction operator +(polynomial const &p, fraction const &f);              //重载多项式加分式
+	friend fraction operator +(fraction const &f, polynomial const &p);
+	friend fraction operator *(polynomial const &p, fraction const &f);              //重载多项式加分式
+	friend fraction operator *(fraction const &f, polynomial const &p);
+	friend fraction operator /(polynomial const &p, fraction const &f);              //重载多项式除以分式
+	friend fraction operator /(fraction const &f, polynomial const &p);              //重载分式除以多项式
 	friend ostream &operator <<(ostream &output, polynomial const &p);
 };
 
@@ -77,13 +91,25 @@ public:
 	polynomial denominator;
 public:
 	fraction() {};
-	fraction (string &expression);                        //也许用不到
+	fraction(polynomial &p);                              //从多项式构造分式,分母为1
 	fraction (fraction &integrate, fraction &numerator, fraction &denominator) : polynomial(integrate), numerator(numerator), denominator(denominator) {};
-	fraction substitution(void);                          //调整幂次为正，约去公因子
+	fraction trySimplify(void);                          //调整幂次为正，约去公因子
 	fraction operator +(fraction const &f2) const;        //重载分式互加
 	fraction operator *(fraction const &f2) const;        //重载分式互乘
 	fraction operator /(fraction const &f2) const;        //重载分式互除
-	friend ostream &operator <<(ostream &output, fraction const &f);
+	friend ostream &operator <<(ostream &output, fraction const &f);               //重载分式输出
+	friend fraction operator +(monomial const &m, fraction const &f);              //重载单项式加分式
+	friend fraction operator +(fraction const &f, monomial const &m);
+	friend fraction operator *(monomial const &m, fraction const &f);              //重载单项式加分式
+	friend fraction operator *(fraction const &f, monomial const &m);
+	friend fraction operator /(monomial const &m, fraction const &f);              //重载单项式除以分式
+	friend fraction operator /(fraction const &f, monomial const &m);              //重载分式除以单项式
+	friend fraction operator +(polynomial const &p, fraction const &f);              //重载多项式加分式
+	friend fraction operator +(fraction const &f, polynomial const &p);
+	friend fraction operator *(polynomial const &p, fraction const &f);              //重载多项式加分式
+	friend fraction operator *(fraction const &f, polynomial const &p);
+	friend fraction operator /(polynomial const &p, fraction const &f);              //重载多项式除以分式
+	friend fraction operator /(fraction const &f, polynomial const &p);              //重载分式除以多项式
 };
 
 #endif // !symbolize
