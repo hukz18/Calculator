@@ -1,4 +1,5 @@
 #include "tools.h"
+#include "symbolize.h"
 #include "operation.h"
 
 
@@ -67,7 +68,6 @@ opExpression::opExpression(opExpression & exp, int begin, int length)
 //析构并释放内存
 opExpression::~opExpression()
 {
-	cout << "deleting" << expression << endl;
 	delete[]this->priority;
 };
 
@@ -104,7 +104,7 @@ opExpression * split(opExpression exp)
 
 
 //递归地求算式的值，目前先返回double(后期返回分式)
-double calculate(opExpression exp)
+fraction calculate(opExpression exp)
 {
 	bool flag = false;                //递归终点:算式中是否含运算符
 	for(int i=0;i<exp.expression.length();i++)
@@ -122,16 +122,16 @@ double calculate(opExpression exp)
 		switch (split1.expression[0])
 		{
 		case '+':return calculate(split0) + calculate(split2);
-		case '-':return calculate(split0) - calculate(split2);
+		case '-':return calculate(split0) + calculate(split2).changeSign();
 		case '*':return calculate(split0) * calculate(split2);
 		case '/':return calculate(split0) / calculate(split2);
-		case '^':return pow(calculate(split0), calculate(split2));
-		default:return 0;
+		//case '^':return pow(calculate(split0), calculate(split2));
+		default:return monomial("0");
 		}
 	}
 	else if (exp.expression.empty())
-		return 0;
-	else return myStod(exp.expression);
+		return monomial("0");
+	else return monomial(exp.expression);
 }
 
 //判断一个字符是否为运算符

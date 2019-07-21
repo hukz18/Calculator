@@ -37,7 +37,7 @@ public:
 	friend polynomial operator *(polynomial const &p, monomial const &m);
 	friend fraction operator /(monomial const &m, polynomial const &p);            //重载单项式除以多项式
 	friend polynomial operator /(polynomial const &p, monomial const &m);          //重载多项式除以单项式
-	friend fraction operator +(monomial const &m, fraction const &f);              //重载单项式加分式
+	friend fraction operator +(monomial const &m, fraction const &f);               //重载单项式加分式
 	friend fraction operator +(fraction const &f, monomial const &m);
 	friend fraction operator *(monomial const &m, fraction const &f);              //重载单项式加分式
 	friend fraction operator *(fraction const &f, monomial const &m);
@@ -52,9 +52,10 @@ public:
 	vector<monomial> terms;
 public:
 	polynomial() {};
-	polynomial(monomial &m) { termNumber = 1; terms.push_back(m); }  //从单项式构造多项式,项数为1
+	polynomial(monomial const &m) { termNumber = 1; terms.push_back(m); }  //从单项式构造多项式,项数为1
 	polynomial(monomial &coefficient, int termNumber, vector<monomial> &terms) :monomial(coefficient), termNumber(termNumber), terms(terms) {};   //考虑如何设置系数缺省值为1
-	virtual bool isZero(void);
+	virtual bool isZero(void) const;
+	void orderBy(char a);                  //按字符a降幂排序
 	int getLength(void) const;             //获取输出后字符串的长度
 	polynomial getConst(char var) const;   //获取对某字母而言的常数项
 	polynomial getCoeff(char var, int power) const; //获取对某字母而言最高次幂的系数项
@@ -63,7 +64,7 @@ public:
 	vector<polynomial> factorize(char var) const;        //递归地分解因式
 	polynomial extraction(void) const;                   //提取公因式
 	polynomial expansion(void) const;                    //多项式展开
-	void orderBy(char a);                    //按字符a降幂排序
+	polynomial DivideWithRemainder(polynomial &divider);       //带余除法，返回余式
 	polynomial substitution(char var, polynomial value) const;       //代入并消除同类项
 	polynomial operator +(polynomial const &p2) const;   //重载多项式互加
 	polynomial operator *(polynomial const &p2) const;   //重载多项式互乘
@@ -83,16 +84,20 @@ public:
 	friend fraction operator /(fraction const &f, polynomial const &p);              //重载分式除以多项式
 	friend ostream &operator <<(ostream &output, polynomial const &p);
 };
-
+polynomial createTerm(char var, polynomial const Coeff, int coeffPower, polynomial const Const, int constpower);//创造提取公因式中的一项
 class fraction : public polynomial             //分式类，公有继承多项式类作为整式部分
 {
 public:
 	polynomial numerator;
 	polynomial denominator;
 public:
-	fraction() {};
-	fraction(polynomial &p);                              //从多项式构造分式,分母为1
+	fraction() { termNumber = 1; }
+	fraction(monomial const &m);                                //从单项式构造分式,分母为1
+	fraction(polynomial const &p);                              //从多项式构造分式,分母为1
+	fraction(fraction const &f) :polynomial(f), numerator(f.numerator), denominator(f.denominator) {};
 	fraction (fraction &integrate, fraction &numerator, fraction &denominator) : polynomial(integrate), numerator(numerator), denominator(denominator) {};
+	fraction changeSign(void) const;
+	virtual bool isZero(void) const{ return numerator.isZero(); }
 	fraction trySimplify(void);                          //调整幂次为正，约去公因子
 	fraction operator +(fraction const &f2) const;        //重载分式互加
 	fraction operator *(fraction const &f2) const;        //重载分式互乘

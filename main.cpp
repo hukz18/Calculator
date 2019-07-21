@@ -74,9 +74,10 @@ bool testCal(void)
 //所有的互加,互乘都写成分式的互加互乘!!!,也解决负指数问题
 int main(void)
 {
-	monomial x("a^2"), y("2ab"), z("b^2"), a("a"), b("b");
-	polynomial p1 = x + y , p2 = x;
+	monomial x("2a^2"), y("2ab"), z("b^2"), a("a"), b("b");
+	polynomial p1 = x + y, p2 = a + x;
 	fraction f1 = p1 / p2;
-	cout << f1 << endl;
+	//cout << f1 << endl;
+	testOpe();
 	return 0;
 }

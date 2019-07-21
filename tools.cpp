@@ -113,12 +113,12 @@ bool changePower(string & str, char var, int target)
 	if (pos != string::npos)
 		return(changePower(str, pos, target));
 	else if (target == 0) return true;
-	else if (target == 1) str.append(1, var);
+	else if (target == 1) str.insert(0, 1, var);
 	else
 	{
-		str.append(1, var);
-		str.append(1, '^');
-		str.append(to_string(target));
+		str.insert(0, 1, var);
+		str.insert(1, 1, '^');
+		str.insert(2, to_string(target));
 	}
 	return true;
 }
@@ -130,6 +130,8 @@ string multiply(string const& str1, string const& str2)
 	int power1, power2;
 	int length1 = str1.length();
 	int length2 = str2.length();
+	if (str1[0] == '\0') return str2;
+	if (str2[0] == '\0') return str1;
 	for (int i = 0; i < length2; i++)
 		if (power2 = getPower(str2, i))
 		{

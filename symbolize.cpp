@@ -8,7 +8,7 @@
 //从字符串构造单项式并合并指数
 monomial::monomial(string const &exp)
 {
-	string expression;
+	string expression="";
 	int power0, power1, length = exp.length();
 	coefficient = myStod(exp);
 	for (int i = 0; i < length; i++)
@@ -114,9 +114,9 @@ ostream & operator<<(ostream & output,monomial const & m)
 /*多项式部分*/
 
 //判定多项式是否为零
-bool polynomial::isZero(void)
+bool polynomial::isZero(void) const
 {
-	if (termNumber == 0 || coefficient == 0) return true;
+	if (termNumber == 0 || coefficient == 0 || terms.empty()) return true;
 	else return false;
 }
 
@@ -131,7 +131,7 @@ polynomial polynomial::extraction(void) const
 		coeff[i] = terms[i].coefficient;
 	result.coefficient = getGCF(coeff, termNumber);
 	for (int i = 0; i < result.termNumber; i++)
-		result.terms[i].coefficient /= coefficient;
+		result.terms[i].coefficient /= result.coefficient;
 	for (int i = 0; i < terms[0].expression.length(); i++)
 		if (power[0] = getPower(terms[0].expression, i))
 		{
@@ -144,7 +144,7 @@ polynomial polynomial::extraction(void) const
 				changePower(result.expression, terms[0].expression[i], copower);
 				for (int j = 1; j < result.termNumber; j++)
 					changePower(result.terms[j].expression, terms[0].expression[i], power[j] - copower);
-				changePower(result.terms[0].expression, i--, power[0] - copower);
+				changePower(result.terms[0].expression, terms[0].expression[i], power[0] - copower);
 			}
 		}
 	return result;
@@ -166,7 +166,22 @@ polynomial polynomial::expansion(void) const
 	return result;
 }
 
-//按字符a降幂排序(用到lanbde表达式)
+//创建提取公因式中的一项
+polynomial createTerm(char var, polynomial const Coeff, int coeffPower, polynomial const Const, int constpower) 
+{
+	polynomial result;
+	monomial Var(string(1, var));
+	result = result + Var;
+	for (int i = 0; i < coeffPower; i++)
+		result = result * Coeff;
+	polynomial temp = Const;
+	for (int i = 1; i < constpower; i++)
+		temp = temp * Const;
+	result = result + temp.changeSign();
+	return result;
+}
+
+//按字符a降幂排序(用到lambda表达式)
 void polynomial::orderBy(char a)
 {
 	sort(terms.begin(), terms.end(), [&](monomial m1, monomial m2)->bool {return(getPower(m1.expression, a) > getPower(m2.expression, a)); });
@@ -193,16 +208,36 @@ polynomial polynomial::substitution(char var, polynomial value) const
 	return result;
 }
 
+//带余除法，返回余式
+polynomial polynomial::DivideWithRemainder(polynomial & divider)
+{
+	polynomial result, remainder;
+	remainder = *this;
+	char var = getComVar(remainder.getVar(), divider.getVar());
+	if (var != '\0')
+	{
+		remainder.orderBy(var);
+		divider.orderBy(var);
+		while ((!remainder.terms.empty()) && getPower(remainder.terms[0].expression, var) >= getPower(divider.terms[0].expression, var))
+		{
+			result = remainder.terms[0] / divider.terms[0] + result;
+			remainder = remainder + remainder.terms[0] / divider.terms[0] * divider.changeSign();
+		}
+	}
+	return remainder;
+}
+
 //改变多项式每项符号用于处理减法
 polynomial polynomial::changeSign(void) const
 {
 	polynomial result = *this;
+	if (result.terms.empty()) return result;
 	for (int i = 0; i < result.termNumber; i++)
 		result.terms[i].coefficient *= -1;
 	return result;
 }
 
-//递归地分解因式
+//递归地分解因式,想得太复杂,回头再做
 vector<polynomial> polynomial::factorize(char var) const
 {
 	vector<polynomial> result;
@@ -212,14 +247,14 @@ vector<polynomial> polynomial::factorize(char var) const
 	polynomial Coeff = exp.getCoeff(var, power);
 	vector<char> ConstVar = Const.getVar(); int ConstSize = ConstVar.size();
 	vector<char> CoeffVar = Coeff.getVar(); int CoeffSize = CoeffVar.size();
-	bool flag = true;
+	bool flag = false;
 	if (Const.termNumber == 1 && Coeff.termNumber == 1)
 	{
 		flag == false;
 		for (int i = 0; i < CoeffSize; i++)
 			for (int j = 0; j < ConstSize; i++)
 			{
-				monomial value = monomial(string(1, ConstVar[i]) + string(1, CoeffVar[j]));
+				monomial value = monomial(string(1, CoeffVar[i]) + string(1, ConstVar[j]));
 				for (int k = 1; k <= getPower(Const.terms[0].expression, ConstVar[i]); k++)
 					for (int l = 1; l <= getPower(Coeff.terms[0].expression, CoeffVar[j]); l++)
 					{
@@ -228,7 +263,16 @@ vector<polynomial> polynomial::factorize(char var) const
 						if (exp.substitution(var, value).isZero())
 						{
 							flag = true;
-							result.push_back(monomial(string(1, var)) + value.changeSign());
+							polynomial term = createTerm(var, monomial(string(1, CoeffVar[j])), l, monomial(string(1, ConstVar[i])), k);
+							if (exp.DivideWithRemainder(term).isZero())
+								result.push_back(term);
+							if(getPower(exp.terms[0].expression,var==0))
+								return result;
+						}
+						if (exp.substitution(var, value.changeSign()).isZero())
+						{
+							flag = true;
+							result.push_back(monomial(string(1, var)) + value);
 						}
 					}
 			}
@@ -245,7 +289,7 @@ int polynomial::getLength(void) const
 	string temp;
 	int length = 0;
 	stringstream stream;
-	if (termNumber == 0) return 0;
+	if (terms.empty()) return 0;
 	if (coefficient != 1)
 	{
 		stream << coefficient;
@@ -264,13 +308,14 @@ int polynomial::getLength(void) const
 		temp += terms[i].expression;
 		length += temp.length();
 	}
-	return (length + 2 * termNumber - 2);
+	return (length + 2*termNumber - 2);
 }
 
 //获取对某字母而言的常数项
 polynomial polynomial::getConst(char var) const
 {
 	polynomial result;
+	if (terms.empty()) return result;
 	for (int i = 0; i < termNumber; i++)
 		if (getPower(terms[i].expression, var) == 0)
 			result = result + terms[i];
@@ -334,36 +379,19 @@ polynomial polynomial::operator*(polynomial const & p2) const
 	return result;
 }
 
-//重载多项式互除,自带分解因式的尝试(低效率)
+
+//重载多项式互除
 fraction polynomial::operator/(polynomial const & p2) const
 {
-	char var;
 	fraction result;
-	polynomial quotient;
 	result.numerator = *this;
 	result.denominator = p2;
-	var = getComVar(result.numerator.getVar(), result.denominator.getVar());
-	polynomial temp = result.numerator;
-	if (var != '\0') //有公共变量
-	{
-		result.numerator.orderBy(var);
-		result.denominator.orderBy(var);
-		while (!temp.terms.empty()&&getPower(temp.terms[0].expression, var) >= getPower(result.denominator.terms[0].expression, var)&& getPower(temp.terms[0].expression, var)>0)
-		{
-			quotient = temp.terms[0] / result.denominator.terms[0] + quotient;
-			temp = temp + temp.terms[0] / result.denominator.terms[0] * result.denominator.changeSign();
-		}
-		if (temp.isZero())
-			return quotient;
-		result.numerator = this->extraction();
-		result.denominator = p2.extraction();
-		monomial &m1 = result.numerator, &m2 = result.denominator;
-		result.numerator.coefficient = 1; result.numerator.expression.erase();
-		result.denominator.coefficient = 1; result.denominator.expression.erase();
-		result.numerator = result.numerator * m1; result.numerator = result.numerator / m2;
-	}
-	
-
+	result.numerator = this->extraction();
+	result.denominator = p2.extraction();
+	monomial &m1 = result.numerator, &m2 = result.denominator;
+	result.numerator = result.numerator * m1; result.numerator = result.numerator / m2;
+	result.numerator.coefficient = 1; result.numerator.expression.erase();
+	result.denominator.coefficient = 1; result.denominator.expression.erase();
 	return result;
 }
 
@@ -388,12 +416,39 @@ ostream & operator<<(ostream & output, polynomial const & p)
 
 /*分式部分*/
 
-//从多项式构造分式,分母为1
-fraction::fraction(polynomial & p)
+//从单项式构造分式,分母为1
+fraction::fraction(monomial const & m)
 {
-	numerator = p;
+	numerator = polynomial(m);
 	denominator.termNumber = 1;
 	denominator.terms.push_back(monomial("1"));
+	for (int i = 0; i < m.expression.length(); i++)
+	{
+		int power = getPower(m.expression, i);
+		if (power < 0)
+		{
+			changePower(numerator.terms[0].expression, m.expression[i], 0);
+			changePower(denominator.terms[0].expression, m.expression[i], -1*power);
+		}
+	}
+}
+
+//从多项式构造分式,分母为1
+fraction::fraction(polynomial const & p)
+{
+	numerator = p;
+	monomial m = p.extraction();
+	denominator.termNumber = 1;
+	denominator.terms.push_back(monomial("1"));
+	for (int i = 0; i < m.expression.length(); i++)
+	{
+		int power = getPower(m.expression, i);
+		if (power > 0)
+			changePower(m.expression, i--, 0);
+	}
+	for(int i=0;i<p.termNumber;i++)
+		numerator.terms[i] = numerator.terms[i] / m;
+	denominator.terms[0] = denominator.terms[0] / m;
 }
 
 //重载分式输出
@@ -402,11 +457,12 @@ ostream & operator<<(ostream & output, fraction const & f)
 	polynomial const &p = f;
 	int l1 = p.getLength();
 	int l2 = f.numerator.getLength(), l3 = f.denominator.getLength();
-	int d1 = (l2 < l3) ? (l1 + (l3 - l2) / 2) : l1;
-	int d2 = (l3 < l2) ? (l1 + (l2 - l3) / 2) : l1;
+	int d1 = (l2 < l3) ? (l1 + (l3 - l2) / 2)+1 : l1;
+	int d2 = (l3 < l2) ? (l1 + (l2 - l3) / 2)+1 : l1;
 	for (int i = 0; i < d1; i++) output << " ";
 	output << f.numerator << endl;
-	output << p;
+	if(!p.terms.empty())
+		output << p;
 	for (int i = 0; i < max(l2, l3); i++) output << "-";
 	output << endl;
 	for (int i = 0; i < d2; i++) output << " ";
@@ -414,15 +470,26 @@ ostream & operator<<(ostream & output, fraction const & f)
 	return output;
 }
 
+
+fraction fraction::changeSign(void) const
+{
+	fraction result = *this;
+	if (result.numerator.terms.empty()) return result;
+	for (int i = 0; i < result.termNumber; i++)
+		result.numerator.terms[i].coefficient *= -1;
+	return result;
+}
+
 //尝试化简分式
 fraction fraction::trySimplify(void)
 {
 	fraction result = *this;
 	char var = getComVar(result.numerator.getVar(), result.denominator.getVar());
-	if (var == '\0') return;
+	if (var == '\0') return *this;
 	result.numerator.orderBy(var);
 	result.denominator.orderBy(var);
 	int power1 = getPower(result.numerator.terms[0].expression, var);
+	return result;
 }
 
 //重载分式互加
@@ -494,8 +561,6 @@ polynomial operator*(monomial const & m, polynomial const & p)
 {
 	polynomial result;
 	result.termNumber = p.termNumber;
-	if(p.coefficient!=1||p.expression!="")
-		 cout << "monomial&polynomial multiply error : having common factor";
 	for (int i = 0; i < p.termNumber; i++)
 		result.terms.push_back(m*p.terms[i]);
 	return result;
@@ -506,22 +571,79 @@ polynomial operator *(polynomial const &p, monomial const &m) { return m * p; }
 fraction operator/(monomial const & m, polynomial const & p)
 {
 	fraction result;
-	polynomial divider(p.extraction());
-	monomial &subdivider = divider;
-	result.numerator.terms.push_back(m / subdivider);result.numerator.termNumber++;
-	divider.coefficient = 1; divider.expression.erase();
-	result.denominator = divider;
+	result.denominator = p.extraction();
+	monomial &coeff = result.denominator;
+	result.numerator = polynomial(m / coeff);
+	result.denominator.coefficient = 1; result.denominator.expression = "";
 	return result;
 }
 
 //重载多项式除以单项式
 polynomial operator/(polynomial const & p, monomial const & m)
 {
-	polynomial result;
-	result.termNumber = p.termNumber;
-	if (p.coefficient != 1 || p.expression != "")
-		cout << "monomial&polynomial divide error : having common factor";
-	for (int i = 0; i < result.termNumber; i++)
-		result.terms.push_back(p.terms[i] / m);
+	polynomial result = p.extraction();
+	monomial &coeff = result;
+	result = coeff / m * result;
+	result.coefficient = 1; result.expression = "";
 	return result;
+}
+
+fraction operator+(monomial const & m, fraction const & f)
+{
+	return fraction(m) + f;
+}
+
+fraction operator+(fraction const & f, monomial const & m)
+{
+	return fraction(m) + f;
+}
+
+fraction operator*(monomial const & m, fraction const & f)
+{
+	return fraction(m) * f;
+}
+
+fraction operator*(fraction const & f, monomial const & m)
+{
+	return fraction(m) * f;
+}
+
+fraction operator/(monomial const & m, fraction const & f)
+{
+	return fraction(m) / f;
+}
+
+fraction operator/(fraction const & f, monomial const & m)
+{
+	return f / fraction(m);
+}
+
+fraction operator+(polynomial const & p, fraction const & f)
+{
+	return fraction(p) + f;
+}
+
+fraction operator+(fraction const & f, polynomial const & p)
+{
+	return fraction(p) + f;
+}
+
+fraction operator*(polynomial const & p, fraction const & f)
+{
+	return fraction(p) * f;
+}
+
+fraction operator*(fraction const & f, polynomial const & p)
+{
+	return fraction(p) * f;
+}
+
+fraction operator/(polynomial const & p, fraction const & f)
+{
+	return fraction(p) / f;
+}
+
+fraction operator/(fraction const & f, polynomial const & p)
+{
+	return f / fraction(p);
 }
