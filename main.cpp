@@ -26,7 +26,7 @@ bool testOpe(void)
 bool testCal(void)
 {
 	int equNum = 0, varNum = 0;
-	double **Auguments;
+	fraction **Auguments;
 	vector<string> Equation;
 	vector<string> Variable;
 	string **Matrix;
@@ -35,11 +35,11 @@ bool testCal(void)
 	cout << "Now verify your varitions, seperate by a space:" << endl;
 	varNum = getVariable(&Variable);
 	Matrix = new string *[equNum];
-	Auguments = new double *[equNum];
+	Auguments = new fraction *[equNum];
 	for (int i = 0; i < equNum; i++)
 	{
 		Matrix[i] = new string[varNum + 1];
-		Auguments[i] = new double[varNum + 1];
+		Auguments[i] = new fraction[varNum + 1];
 	}
 	getMatrix(Equation, Variable, Matrix);
 	cout << "The augumented coeffient matrix is:" << endl;
@@ -47,8 +47,8 @@ bool testCal(void)
 	{
 		for (int j = 0; j < varNum + 1; j++)
 		{
-			Auguments[i][j] = myStod(Matrix[i][j]);
-			cout << setw(4) << Auguments[i][j] << " ";
+			Auguments[i][j] = fraction(polynomial(Matrix[i][j]));
+			cout << setw(4) << Matrix[i][j] << " ";
 		}
 		cout << endl;
 	}
@@ -56,7 +56,7 @@ bool testCal(void)
 	{
 		cout << "The solutions are as follows:" << endl;
 		for (int i = 0; i < varNum; i++)
-			cout << Variable[i] << " = " << Auguments[i][varNum] << ",";
+			cout << Variable[i] << " = " << endl << Auguments[i][varNum] << "," << endl;
 	}
 	cout << endl << "Done!" << endl;
 	cin.get();
@@ -75,11 +75,6 @@ bool testCal(void)
 //f2.terms[0].expression[0] != '\0',!f2.terms[0].expression.empty(), !f2.terms.empty()
 int main(void)
 {
-	string test;
-	cin >> test;
-	opExpression op(test);
-	fraction f = calculate(op);
-	fraction f0 = f.trySimplify();
-	cout << f0 << endl;
+	//testCal();
 	return 0;
 }

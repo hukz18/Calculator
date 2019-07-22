@@ -1,4 +1,6 @@
 #include "tools.h"
+#include "symbolize.h"
+#include "operation.h"
 #include "calculator.h"
 
 
@@ -7,7 +9,7 @@
 
 
 //交换矩阵的两行元素
-void exchangeRow(int r1, int r2, int col,double ** Augument)
+void exchangeRow(int r1, int r2, int col,fraction ** Augument)
 {
 	for (int i = 0; i < col; i++)
 		swap(Augument[r1][i], Augument[r2][i]);
@@ -20,12 +22,14 @@ int getEqution(vector <string> *equ)
 	string temp;
 	int position = 0;
 	getline(cin, temp);
+	simplize(temp);
 	while (!temp.empty())
 	{
 		if (temp[0] != '-')
 			temp.insert(0, 1, '+');
 		equ->push_back(temp);
 		getline(cin, temp);
+		simplize(temp);
 	}
 	return equ->size();
 }
@@ -44,6 +48,25 @@ int getVariable(vector<string> *var)
 	sort(var->begin(), var->end());                                 //清除var中可能的重复元素，避免bug
 	var->erase(unique(var->begin(), var->end()), var->end());
 	return var->size();
+}
+
+void simplize(string & equ)
+{
+	string equL, equR, result;
+	if (equ.empty()) return;
+	int pos = equ.find('=');
+	equL = equ.substr(0, pos); equR = equ.substr(pos + 1);
+	fraction fL = calculate(equL);
+	fraction fR = calculate(equR);
+	polynomial pL = fL.numerator*fR.denominator;
+	polynomial pR = fR.numerator*fL.denominator;
+	stringstream stream;
+	stream << pL;
+	equ = stream.str();
+	equ += "=";
+	stream.str("");
+	stream << pR;
+	equ.append(stream.str());
 }
 
 //获取系数矩阵，返回是否成功,包括移项、处理系数为1等feature
@@ -84,18 +107,18 @@ bool getMatrix(vector<string>& equ, vector<string>& var, string ** Matrix)
 						temp += "1";
 					if (flag1 == true)             //该项在等号右侧且含有变量
 						changeSign(temp);
-					Matrix[i][j] = temp;
+					if (Matrix[i][j] == "0")
+						Matrix[i][j] = temp;
+					else Matrix[i][j].append(temp);
 				}
 			}
 			if (flag2 == false)  //该项未找到变量
 			{
 				if (flag1 == false)
-				{
 					changeSign(temp);
-					if (Matrix[i][varNum] == "0")
-						Matrix[i][varNum] = temp;
-					else Matrix[i][varNum].append(temp);
-				}
+				if (Matrix[i][varNum] == "0")
+					Matrix[i][varNum] = temp;
+				else Matrix[i][varNum].append(temp);
 			}
 			if (equ[i][cur] == '=')
 			{
@@ -111,10 +134,10 @@ bool getMatrix(vector<string>& equ, vector<string>& var, string ** Matrix)
 }
 
 //高斯消元法处理增广系数矩阵
-bool Elimination(double ** Augument, int equ, int var)
+bool Elimination(fraction ** Augument, int equ, int var)
 {
 	int i, j, k, flag = 1;
-	double temp = 0;
+	fraction temp;
 	if (equ < var)//检查方程是否欠定
 	{
 		cout << "The equtions are underdetermined ,please input more equtions and try again!" << endl;
@@ -124,11 +147,11 @@ bool Elimination(double ** Augument, int equ, int var)
 	{
 		flag = 1;
 		//检查是否可以消元
-		if (isZero(Augument[k][k]))
+		if (Augument[k][k].isZero())
 		{
 			flag = 0;
 			for (i = k; i < equ; i++)
-				if (!isZero(Augument[i][k]))
+				if (!Augument[i][k].isZero())
 				{
 					exchangeRow(i, k, var + 1, Augument);
 					flag = 1;
@@ -141,24 +164,24 @@ bool Elimination(double ** Augument, int equ, int var)
 		//将第k行首项划为1
 		temp = Augument[k][k];
 		for (i = k; i <= var; i++)
-			Augument[k][i] /= temp;
+			Augument[k][i] = Augument[k][i] / temp;
 		//将第k列其余系数划为0
 		for (i = 0; i < equ; i++)
 		{
 			if (i == k) continue;
 			temp = Augument[i][k];
 			for (j = k; j <= var; j++)
-				Augument[i][j] += -1*temp * Augument[k][j];
+				Augument[i][j] = Augument[i][j] +(temp * Augument[k][j]).changeSign();
 		}
 	}
 	if (equ > var)//检查方程是否超定,及是否有解
 	{
 		for (i = var; i < equ; i++)
 		{
-			temp = 0;
+			fraction temp;
 			for (j = 0; j < var; j++)
-				temp += Augument[i][j] * Augument[j][var];
-			if (!isZero(temp - Augument[i][var]))
+				temp = Augument[i][j] * Augument[j][var] + temp;
+			if (!(temp + Augument[i][var].changeSign()).isZero())
 			{
 				cout << "The equtions are overdeterminated, and there's no sotion!" << endl;
 				return false;
@@ -166,9 +189,5 @@ bool Elimination(double ** Augument, int equ, int var)
 		}
 		cout << "The equtions are overdeterminated, but there's still a sotion!" << endl;
 	}
-	//让看起来像0的真的变成0
-	for (i = 0; i < equ; i++)
-		if (isZero(Augument[i][var]))
-			Augument[i][var] = 0;
 	return true;
 }

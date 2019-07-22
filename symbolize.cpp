@@ -121,8 +121,8 @@ bool monomial::operator==(monomial const & m2) const
 //重载单项式输出
 ostream & operator<<(ostream & output,monomial const & m)
 {
-	if (m.coefficient == 0) return output;
-	if (m.expression.empty()) output << m.coefficient;
+	if (m.coefficient == 0) output << "0";
+	else if (m.expression[0]=='\0') output << m.coefficient;
 	else if (m.coefficient == 1) output << m.expression;
 	else if (m.coefficient == -1) output << "-" << m.expression;
 	else output << m.coefficient << m.expression;
@@ -138,6 +138,21 @@ ostream & operator<<(ostream & output,monomial const & m)
 
 /*多项式部分*/
 
+polynomial::polynomial(string const & expression)
+{
+	string temp;
+	int head, cur = 0;
+	int length = expression.length();
+	while (cur < length)
+	{
+		head = cur++;
+		while ((expression[cur] != '+') && (expression[cur] != '-') && cur < length) cur++;
+		temp = expression.substr(head, cur - head);
+		termNumber++;
+		terms.push_back(monomial(temp));
+	}
+}
+
 //判定多项式是否为零
 bool polynomial::isZero(void) const
 {
@@ -150,6 +165,7 @@ polynomial polynomial::extraction(void) const
 {
 	bool flag = true;
 	polynomial result(*this);
+	if (termNumber == 0) return result;
 	int *power = new int[termNumber], copower;
 	double *coeff = new double[termNumber];
 	for (int i = 0; i < termNumber; i++)
@@ -191,21 +207,7 @@ polynomial polynomial::expansion(void) const
 	return result;
 }
 
-//创建提取公因式中的一项
-polynomial createTerm(char var, polynomial const Coeff, int coeffPower, polynomial const Const, int constpower) 
-{
-	polynomial result;
-	monomial Var(string(1, var));
-	result = result + Var;
-	for (int i = 0; i < coeffPower; i++)
-		result = result * Coeff;
-	polynomial temp = Const;
-	for (int i = 1; i < abs(constpower); i++)
-		temp = temp * Const;
-	if (constpower < 0) result = result + temp;
-	else result = result + temp.changeSign();
-	return result;
-}
+
 
 //按字符a降幂排序(用到lambda表达式)
 void polynomial::orderBy(char a)
@@ -272,6 +274,7 @@ vector<polynomial> polynomial::factorize(char var) const
 	vector<polynomial> result;
 	polynomial exp(*this); exp.orderBy(var);
 	int power = getPower(exp.terms[0].expression, var);
+	if (power == 1) { result.push_back(*this); return result; }
 	polynomial Const = exp.getConst(var);
 	polynomial Coeff = exp.getCoeff(var, power);
 	vector<char> ConstVar = Const.getVar(); int ConstSize = ConstVar.size();
@@ -280,20 +283,20 @@ vector<polynomial> polynomial::factorize(char var) const
 	if (Const.termNumber == 1 && Coeff.termNumber == 1)
 	{
 		for (int i = 0; i < CoeffSize; i++)
-			for (int j = 0; j < ConstSize; i++)
+			for (int j = 0; j < ConstSize; j++)
 			{
 				monomial value = monomial(string(1, CoeffVar[i]) + string(1, ConstVar[j]));
-				for (int k = 1; k <= getPower(Const.terms[0].expression, ConstVar[i]); k++)
-					for (int l = 1; l <= getPower(Coeff.terms[0].expression, CoeffVar[j]); l++)
+				for (int k = 1; k <= (getPower(Const.terms[0].expression, ConstVar[j]+1)/2); k++)
+					for (int l = 1; l <= (getPower(Coeff.terms[0].expression, CoeffVar[i])+1)/2; l++)
 					{
 						int l0 = l;
 						flag = false;
-						changePower(value.expression, ConstVar[i], k);
-						changePower(value.expression, CoeffVar[j], -1 * l);
+						changePower(value.expression, ConstVar[j], k);
+						changePower(value.expression, CoeffVar[i], -1 * l);
 						if (exp.substitution(var, value).isZero())              //coeff*x+const
 						{
 							flag = true;
-							polynomial term = createTerm(var, monomial(string(1, CoeffVar[j])), l, monomial(string(1, ConstVar[i])), k);
+							polynomial term = createTerm(var, monomial(string(1, CoeffVar[i])), l, monomial(string(1, ConstVar[j])), k);
 							if (exp.DivideWithRemainder(term).isZero())
 								result.push_back(term);
 							if (getPower(exp.terms[0].expression, var) == 0)
@@ -302,7 +305,7 @@ vector<polynomial> polynomial::factorize(char var) const
 						if (exp.substitution(var, value.changeSign()).isZero())  //coeff*x-const
 						{
 							flag = true;
-							polynomial term = createTerm(var, monomial(string(1, CoeffVar[j])), l, monomial(string(1, ConstVar[i])), -1*k);
+							polynomial term = createTerm(var, monomial(string(1, CoeffVar[i])), l, monomial(string(1, ConstVar[j])), -1*k);
 							if (exp.DivideWithRemainder(term).isZero())
 								result.push_back(term);
 							if (getPower(exp.terms[0].expression, var )==0)
@@ -311,10 +314,10 @@ vector<polynomial> polynomial::factorize(char var) const
 						if (flag == true) l = l0 - 1;
 					}
 			}
-		if (flag == false) result.push_back(*this);
 	}
 	//vector<polynomial> CONST = Const.factorize(ConstVar[0]);
 	//vector<polynomial> COEFF = Coeff.factorize(CoeffVar[0]);
+	if (flag == false) result.push_back(*this);
 	return result;
 }
 
@@ -403,8 +406,6 @@ polynomial polynomial::operator*(polynomial const & p2) const
 fraction polynomial::operator/(polynomial const & p2) const
 {
 	fraction result;
-	result.numerator = *this;
-	result.denominator = p2;
 	result.numerator = this->extraction();
 	result.denominator = p2.extraction();
 	monomial &m1 = result.numerator, &m2 = result.denominator;
@@ -490,14 +491,11 @@ fraction::fraction(polynomial const & p)
 ostream & operator<<(ostream & output, fraction const & f)
 {
 	polynomial const &p = f;
-	int l1 = p.getLength();
 	int l2 = f.numerator.getLength(), l3 = f.denominator.getLength();
-	int d1 = (l2 < l3) ? (l1 + (l3 - l2) / 2)+1 : l1;
-	int d2 = (l3 < l2) ? (l1 + (l2 - l3) / 2)+1 : l1;
+	int d1 = (l2 < l3) ?  ((l3 - l2) / 2)+1 : 0;
+	int d2 = (l3 < l2) ? ((l2 - l3) / 2)+1 : 0;
 	for (int i = 0; i < d1; i++) output << " ";
 	output << f.numerator << endl;
-	if(!p.terms.empty())
-		output << p;
 	for (int i = 0; i < max(l2, l3); i++) output << "-";
 	output << endl;
 	for (int i = 0; i < d2; i++) output << " ";
@@ -534,9 +532,9 @@ double fraction::toDigit(void) const
 //尝试化简分式
 fraction fraction::trySimplify(void)
 {
-	fraction result = *this;
+	fraction result = this->numerator/this->denominator;//待处理前缀
 	char var = getComVar(result.numerator.getVar(), result.denominator.getVar());
-	if (var == '\0') return *this;
+	if (var == '\0') return result;
 	vector<polynomial> num = numerator.factorize(var);
 	vector<polynomial> denom = denominator.factorize(var);
 	if(num.size()>1||denom.size()>1)
@@ -569,8 +567,7 @@ fraction fraction::operator+(fraction const & f2) const
 	polynomial p1 = numerator * f2.denominator;
 	polynomial p2 = f2.numerator * denominator;
 	result.numerator = p1 + p2;
-	//result.substitution();
-	return result;
+	return result.trySimplify();
 }
 
 //重载分式互乘
@@ -581,8 +578,7 @@ fraction fraction::operator*(fraction const & f2) const
 		cout << "err!fracton multuply!" << endl;
 	result.numerator = numerator * f2.numerator;
 	result.denominator = denominator * f2.denominator;
-	//result.substitution();
-	return result;
+	return result.trySimplify();
 }
 
 //重载分式互除
@@ -593,8 +589,7 @@ fraction fraction::operator/(fraction const & f2) const
 		cout << "err!fracton division!" << endl;
 	result.numerator = numerator * f2.denominator;
 	result.denominator = denominator * f2.numerator;
-	//result.substitution();
-	return result;
+	return result.trySimplify();
 }
 
 

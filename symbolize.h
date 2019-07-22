@@ -55,6 +55,7 @@ public:
 	vector<monomial> terms;
 public:
 	polynomial() { coefficient = 1; }
+	polynomial(string const &expression);  //从字符串构造多项式
 	polynomial(monomial const &m) { coefficient = 1; termNumber = 1; terms.push_back(m); }  //从单项式构造多项式,项数为1
 	polynomial(monomial &coefficient, int termNumber, vector<monomial> &terms) :monomial(coefficient), termNumber(termNumber), terms(terms) {};   //考虑如何设置系数缺省值为1
 	virtual bool isZero(void) const;
@@ -89,7 +90,7 @@ public:
 	friend fraction operator /(fraction const &f, polynomial const &p);              //重载分式除以多项式
 	friend ostream &operator <<(ostream &output, polynomial const &p);
 };
-polynomial createTerm(char var, polynomial const Coeff, int coeffPower, polynomial const Const, int constpower);//创造提取公因式中的一项
+
 
 class fraction : public polynomial             //分式类，公有继承多项式类作为整式部分
 {

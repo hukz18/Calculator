@@ -20,6 +20,7 @@ opExpression::opExpression(string & exp)
 			while (j < length - 1 && isdigit(exp[j])) j++;
 			if (isalpha(exp[j])) exp.insert(j, 1, '*');
 		}
+		if (i > 1 && (exp[i] == '^') && (isalpha(exp[i - 2]))) exp.insert(i - 1, 1, '*');
 	}
 	length = exp.length();                            //开始计算优先级
 	int cur = 0, level = 0;
@@ -142,7 +143,7 @@ fraction calculate(opExpression exp)
 			}
 			else if (calculate(split2).isDigit() && isZero(calculate(split2).toDigit() - (int)calculate(split2).toDigit()))
 				return myPow(calculate(split0), (int)calculate(split2).toDigit());
-			else return monomial("0");
+			else cout << "illegal input for '^'!" << endl; return monomial("0");
 		}
 		default:return monomial("0");
 		}

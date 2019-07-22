@@ -1,4 +1,5 @@
 #include "tools.h"
+#include "symbolize.h"
 
 //判定一个double数是否为"0"
 bool isZero(double x)
@@ -10,8 +11,9 @@ bool isZero(double x)
 //修正系数为1时stod函数的bug
 double myStod(string const & str)
 {
-	if (isdigit(str[0])) return stod(str);
-	else if (isalpha(str[0])) return 1;
+	if (isalpha(str[0])) return 1;
+	else if (isdigit(str[0])) return stod(str);
+	else if (str[0] == '+'&&isalpha(str[1])) return 1;
 	else if (str[0] == '-'&&isalpha(str[1])) return -1;
 	else return 0;
 }
@@ -123,6 +125,44 @@ bool changePower(string & str, char var, int target)
 		str.insert(2, to_string(target));
 	}
 	return true;
+}
+
+monomial createValue(vector<char> const & Coeff, double coeffvalue, vector<char> const & Const, double constvalue)
+{
+	return monomial();
+}
+
+//创建提取公因式中的一项
+polynomial createTerm(char var, polynomial const Coeff, int coeffPower, polynomial const Const, int constpower)
+{
+	polynomial result;
+	monomial Var(string(1, var));
+	result = result + Var;
+	for (int i = 0; i < coeffPower; i++)
+		result = result * Coeff;
+	polynomial temp = Const;
+	for (int i = 1; i < abs(constpower); i++)
+		temp = temp * Const;
+	if (constpower < 0) result = result + temp;
+	else result = result + temp.changeSign();
+	return result;
+}
+
+//求整数的全部质因子用于分解
+//仿照这个写分解因式，elae value++->value=valuenext,term=termnext
+vector<int> factorize(int n)
+{
+	int value = 2, temp = n;
+	vector<int> factors;
+	while (n >= value )
+		if ((n % value) == 0)
+		{
+			factors.push_back(value);
+			n /= value;
+			value = 2;
+		}
+		else value++;
+	return factors;
 }
 
 //两个字符串表达式相"乘"
