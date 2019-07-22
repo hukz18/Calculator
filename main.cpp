@@ -71,13 +71,15 @@ bool testCal(void)
 }
 
 //写factorize,重载等于来改写trySymplize,每次操作完调用tryfactorize,注意monomial的指数可能为负带来的问题
-//所有的互加,互乘都写成分式的互加互乘!!!,也解决负指数问题
+//改写所有的分式多项式运算处理前缀问题，编写各自鲁棒的iszero和isdigit(isnull)，改写之前的判定,思考各自的缺省值是否合理
+//f2.terms[0].expression[0] != '\0',!f2.terms[0].expression.empty(), !f2.terms.empty()
 int main(void)
 {
-	monomial x("2a^2"), y("2ab"), z("b^2"), a("a"), b("b");
-	polynomial p1 = x + y, p2 = a + x;
-	fraction f1 = p1 / p2;
-	//cout << f1 << endl;
-	testOpe();
+	string test;
+	cin >> test;
+	opExpression op(test);
+	fraction f = calculate(op);
+	fraction f0 = f.trySimplify();
+	cout << f0 << endl;
 	return 0;
 }

@@ -10,8 +10,10 @@ bool isZero(double x)
 //修正系数为1时stod函数的bug
 double myStod(string const & str)
 {
-	if (!(isdigit(str[0])||str[0]=='-'||str[0]=='+')) return 1;
-	else return stod(str);
+	if (isdigit(str[0])) return stod(str);
+	else if (isalpha(str[0])) return 1;
+	else if (str[0] == '-'&&isalpha(str[1])) return -1;
+	else return 0;
 }
 
 //若均为整数则返回最大公因数

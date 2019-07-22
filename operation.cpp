@@ -10,9 +10,17 @@ opExpression::opExpression(string & exp)
 	priority = new double[length];
 	for (int i = 0; i < length ; i++)
 		this->priority[i] = 0;
-	for (int i = 0; i < length; i++)                  //处理括号相连表示的乘法
+	for (int i = 0; i < length - 1; i++)                  //处理括号相连及指数相连表示的乘法
+	{
 		if (((exp[i] == ')') && (exp[i + 1] == '(')) || ((!(isOpe(exp[i]))) && (exp[i + 1] == '(')))
-			exp.insert(i+1, 1, '*');
+			exp.insert(i + 1, 1, '*');
+		if ((exp[i] == '^') && (isdigit(exp[i + 1])))
+		{
+			int j = i + 1;
+			while (j < length - 1 && isdigit(exp[j])) j++;
+			if (isalpha(exp[j])) exp.insert(j, 1, '*');
+		}
+	}
 	length = exp.length();                            //开始计算优先级
 	int cur = 0, level = 0;
 	double orderOffset = 0;
@@ -125,7 +133,17 @@ fraction calculate(opExpression exp)
 		case '-':return calculate(split0) + calculate(split2).changeSign();
 		case '*':return calculate(split0) * calculate(split2);
 		case '/':return calculate(split0) / calculate(split2);
-		//case '^':return pow(calculate(split0), calculate(split2));
+		case '^':
+		{
+			if (calculate(split0).isDigit() && calculate(split2).isDigit())
+			{
+				int power = pow(calculate(split0).toDigit(), calculate(split2).toDigit());
+				return (fraction(monomial(power)));
+			}
+			else if (calculate(split2).isDigit() && isZero(calculate(split2).toDigit() - (int)calculate(split2).toDigit()))
+				return myPow(calculate(split0), (int)calculate(split2).toDigit());
+			else return monomial("0");
+		}
 		default:return monomial("0");
 		}
 	}
@@ -152,6 +170,6 @@ int prior(char c)
 	case '*':return 2;
 	case '/':return 2;
 	case '^':return 3;
-	default:return 1e6; //该字符为数字则设为最大优先级，避免在数字处分段
+	default:return 1000000; //该字符为数字则设为最大优先级，避免在数字处分段
 	}
 }
