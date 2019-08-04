@@ -84,7 +84,7 @@ opExpression::~opExpression()
 //以最低优先级的操作符为界，将一段表达式分割为两段
 opExpression * split(opExpression exp)
 {
-	int minPos, length;
+	int minPos = 0, length;
 	double prior = exp.priority[0];
 	opExpression *split = new opExpression[3];
 	length = exp.expression.length();

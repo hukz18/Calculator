@@ -1,5 +1,4 @@
 #include "tools.h"
-#include "symbolize.h"
 
 //判定一个double数是否为"0"
 bool isZero(double x)
@@ -13,6 +12,7 @@ double myStod(string const & str)
 {
 	if (isalpha(str[0])) return 1;
 	else if (isdigit(str[0])) return stod(str);
+	else if ((str[0] == '+'&&isdigit(str[1])) || (str[0] == '-'&&isdigit(str[1]))) return stod(str);
 	else if (str[0] == '+'&&isalpha(str[1])) return 1;
 	else if (str[0] == '-'&&isalpha(str[1])) return -1;
 	else return 0;
@@ -23,12 +23,12 @@ double getGCF(double *a,int n)
 {
 	bool flag = true;
 	int *b = new int[n];
-	int gcf = 1, m = *min_element(a, a+n);
 	for (int i = 0; i < n; i++)
 	{
-		b[i] = (int)a[i];
-		if (!isZero(a[i] - b[i])) return 1;
+		b[i] = abs((int)a[i]);
+		if (!isZero(abs(a[i]) - b[i])) return 1;
 	}
+	int gcf = 1, m = *min_element(b, b + n);
 	for (int i = 1; i <= m; i++)
 	{
 		flag = true;
@@ -51,7 +51,7 @@ void changeSign(string & str)
 int getPower(string const & str, int pos)
 {
 	if (!isalpha(str[pos])) return 0;
-	if (str[pos + 1] == '^')
+	else if (str[pos + 1] == '^')
 		return stoi(str.substr(pos + 2));
 	else return 1;
 }
@@ -63,6 +63,17 @@ int getPower(string const & str, char var)
 	if (pos == string::npos) return 0;
 	else if (str[pos + 1] != '^') return 1;
 	else return stoi(str.substr(pos + 2));
+}
+
+//获取整数n的某质因子的幂次
+int getIntPower(int n, int value)
+{
+	int power = 0;
+	while(n>1)
+		if (isZero(((double)n / value) - n / value))
+			{ power++; n /= value; }
+		else break;
+	return power;
 }
 
 //获取两组变量中共有变量，若无则返回'\0'
@@ -127,26 +138,21 @@ bool changePower(string & str, char var, int target)
 	return true;
 }
 
-monomial createValue(vector<char> const & Coeff, double coeffvalue, vector<char> const & Const, double constvalue)
+bool * Subset(int n, int cur)
 {
-	return monomial();
-}
-
-//创建提取公因式中的一项
-polynomial createTerm(char var, polynomial const Coeff, int coeffPower, polynomial const Const, int constpower)
-{
-	polynomial result;
-	monomial Var(string(1, var));
-	result = result + Var;
-	for (int i = 0; i < coeffPower; i++)
-		result = result * Coeff;
-	polynomial temp = Const;
-	for (int i = 1; i < abs(constpower); i++)
-		temp = temp * Const;
-	if (constpower < 0) result = result + temp;
-	else result = result + temp.changeSign();
+	bool *result = new bool[n];
+	int temp = cur, pos = 0;
+	for (int i = 0; i < n; i++) result[i] = false;
+	while (temp > 0)
+	{
+		result[pos++] = temp % 2;
+		temp /= 2;
+	}
 	return result;
 }
+
+
+
 
 //求整数的全部质因子用于分解
 //仿照这个写分解因式，elae value++->value=valuenext,term=termnext
@@ -154,15 +160,45 @@ vector<int> factorize(int n)
 {
 	int value = 2, temp = n;
 	vector<int> factors;
+	if (n == 1 || n == -1)
+	{
+		factors.push_back(1);
+		return factors;
+	}
+	factors.push_back(1);
 	while (n >= value )
 		if ((n % value) == 0)
 		{
-			factors.push_back(value);
 			n /= value;
+			if(find(factors.begin(),factors.end(),value)==factors.end())
+				factors.push_back(value);
 			value = 2;
 		}
 		else value++;
 	return factors;
+}
+
+//求整数的全部因子
+vector<int> getFactor(int n)
+{
+	vector<int> factors;
+	n = abs(n);
+	for (int i = 1; i <= n / 2; i++)
+		if (n % i == 0) factors.push_back(i);
+	factors.push_back(n);
+	return factors;
+}
+
+
+vector<double> getValue(vector<int> &con, vector<int> &eff)
+{
+	int lcon = con.size(), leff = eff.size();
+	vector<double> result;
+	for(int i=0;i<lcon;i++)
+		for(int j=0;j<leff;j++)
+			if(find(result.begin(),result.end(),(double)con[i]/eff[j])==result.end())
+				result.push_back((double)con[i] / eff[j]);
+	return result;
 }
 
 //两个字符串表达式相"乘"
