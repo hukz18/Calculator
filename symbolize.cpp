@@ -180,7 +180,19 @@ polynomial::polynomial(string const & expression)
 bool polynomial::isZero(void) const
 {
 	if (termNumber == 0 || coefficient == 0 || terms.empty()) return true;
-	else return false;
+	bool flag = true;
+	for (int i = 0; i < termNumber; i++)
+		if (!tools::isZero(terms[i].coefficient)) flag = false;
+	return flag;
+}
+
+//确认多项式是否"小于零"
+bool polynomial::isNegative(void) const
+{
+	bool flag = true;
+	for (int i = 0; i < termNumber; i++)
+		if (terms[i].coefficient >= 0) flag = false;
+	return flag;
 }
 
 //提取公因式
@@ -307,8 +319,10 @@ vector<polynomial> polynomial::factorize(char var) const
 	polynomial exp(*this); exp.orderBy(var);
 	int step = 0;
 	int power = getPower(exp.terms[0].expression, var);
-	if (power == 1) { result.push_back(*this); return result; }
-	polynomial Const = exp.getConst(var), Coeff = exp.getCoeff(var, power);;
+	vector<int> varPower = getFactor(power); int varPowerSize = varPower.size() - 1;
+	if (varPowerSize == 0) varPowerSize += 1;
+	if (exp.termNumber <= 2) { result.push_back(*this); return result; }
+	polynomial Const = exp.getConst(var), Coeff = exp.getCoeff(var, power);
 	vector<char> ConstVar = Const.getVar(), CoeffVar = Coeff.getVar();
 	int ConstSize = ConstVar.size(), CoeffSize = CoeffVar.size();
 	
@@ -319,7 +333,7 @@ vector<polynomial> polynomial::factorize(char var) const
 		#pragma region PreValue
 		vector<int> effFactor, conFactor;
 		double constvalue = Const.terms[0].coefficient; double coeffvalue = Coeff.terms[0].coefficient;
-		if (tools::isZero(coeffvalue - (int)coeffvalue) && tools::isZero(constvalue - (int)constvalue))
+		if (isInteger(coeffvalue) && isInteger(constvalue))
 		{
 			effFactor = getFactor((int)coeffvalue);
 			conFactor = getFactor((int)constvalue);
@@ -345,18 +359,20 @@ vector<polynomial> polynomial::factorize(char var) const
 		polynomial nextTerm = createTerm(var, value, power);
 		#pragma endregion
 		//vars=value.getVar(),*powers,*factors,power=NextPower
-		while ((getPower(exp.terms[0].expression, var) > getPower(nextTerm.terms[0].expression, var))&&(getPower(nextTerm.terms[0].expression, var)!=0))
+		while ((getPower(exp.terms[0].expression, var) > getPower(nextTerm.terms[0].expression, var)) && (!value.isZero()))
 		{
-			for (int i = 0; i < total; i++)
-			{
-				power = nextPower(vars, powers, factors, i);
-				nextTerm = createTerm(var, value, power);
-				if (exp.tryDivide(nextTerm))
+			for (int i = 0; i < varPowerSize; i++)
+				for (int j = 0; j < total; j++)
 				{
-					result.push_back(nextTerm); step = 0;
-					if (getPower(exp.terms[0].expression, var) == 1 || getPower(exp.terms[0].expression, var) == 0) { result.push_back(exp); return result; }
+					power = nextPower(vars, powers, factors, j);
+					nextTerm = createTerm(var, value, power);
+					changePower(nextTerm.terms[0].expression, var, varPower[i]);
+					if (exp.tryDivide(nextTerm))
+					{
+						result.push_back(nextTerm); step = 0;
+						if (getPower(exp.terms[0].expression, var) == 1 || getPower(exp.terms[0].expression, var) == 0) { result.push_back(exp); return result; }
+					}
 				}
-			}
 			value = nextValue(step, CoeffVar, ConstVar, Coeffvalue);
 			#pragma region PrePower
 			vars = value.getVar(); size = vars.size();
@@ -414,7 +430,7 @@ int polynomial::getCoeff(void) const
 		coeff[i] = terms[i].coefficient;
 	double result = getGCF(coeff, termNumber);
 	delete[]coeff;
-	if (tools::isZero(result - (int)result)) return result;
+	if (isInteger(result)) return result;
 	else return 1;
 }
 
@@ -489,6 +505,8 @@ polynomial polynomial::operator+(polynomial const & p2) const
 polynomial polynomial::operator*(polynomial const & p2) const
 {
 	polynomial result;
+	if ((*this).isZero() || p2.isZero())
+		return result;
 	for (int i = 0; i < termNumber; i++)
 		for (int j = 0; j < p2.termNumber; j++)
 			result = result + terms[i] * p2.terms[j];
@@ -527,7 +545,7 @@ ostream & operator<<(ostream & output, polynomial const & p)
 	monomial const &m = p;
 	if (m.expression != ""||m.coefficient!=1)
 		output << m << " (";
-	if (p.termNumber == 0) return output;
+	if (p.isZero()) { output << "0"; return output; }
 	output << p.terms[0] << " ";
 	for (int i = 1; i < p.termNumber; i++)
 	{
@@ -660,11 +678,11 @@ ostream & operator<<(ostream & output, fraction const & f)
 	return output;
 }
 
-
+//改变分式的符号
 fraction fraction::changeSign(void) const
 {
-	fraction result = *this;
-	if (result.numerator.terms.empty()) return result;
+	fraction result(*this);
+	if (result.isZero()) return result;
 	for (int i = 0; i < result.numerator.termNumber; i++)
 		result.numerator.terms[i].coefficient *= -1;
 	return result;
@@ -692,18 +710,35 @@ fraction fraction::trySimplify(void)
 	fraction result(*this);//待处理前缀
 	char varnum = result.numerator.getMainTerm();
 	char vardenom = result.denominator.getMainTerm();
+	if (result.numerator.isNegative() && result.denominator.isNegative()) 
+	{ result.numerator = result.numerator.changeSign(); result.denominator = result.denominator.changeSign(); }
+	if (result.numerator.isZero()) result.denominator = monomial(1);
 	if (varnum == '0' || vardenom == '0') return result;
 	vector<polynomial> num = numerator.factorize(varnum);
 	vector<polynomial> denom = denominator.factorize(vardenom);
-	if(num.size()>1||denom.size()>1)
-		for(int i=0;i<num.size();i++)
-			if (find(denom.begin(), denom.end(), num[i]) != denom.end())
-			{
-				result.numerator.DivideWithRemainder(num[i]);
-				result.denominator.DivideWithRemainder(num[i]);
-				denom.erase(find(denom.begin(), denom.end(), num[i]));
-			}
+	for (int i = 0; i < num.size(); i++)
+	{
+		vector<polynomial>::iterator iter = find(denom.begin(), denom.end(), num[i]);
+		if (iter != denom.end())
+		{
+			result.numerator.DivideWithRemainder(num[i]);
+			result.denominator.DivideWithRemainder(num[i]);
+			denom.erase(iter);
+		}
+	}
 	return result;
+}
+
+//用于debug的输出
+void output(fraction ** const Matrix, int row, int column)
+{
+	for (int i = 0; i < row; i++)
+	{
+		for (int j = 0; j < column; j++)
+			cout << Matrix[i][j].numerator << "/" << Matrix[i][j].denominator << "  ";
+		cout << endl;
+	}
+	cout << endl;
 }
 
 //求幂运算，用于计算"^"操作符
@@ -733,6 +768,7 @@ fraction fraction::operator+(fraction const & f2) const
 fraction fraction::operator*(fraction const & f2) const
 {
 	fraction result;
+	if ((*this).isZero() || f2.isZero()) return result;
 	if (f2.terms[0].expression[0] != '\0')
 		cout << "err!fracton multuply!" << endl;
 	result.numerator = numerator * f2.numerator;
@@ -783,6 +819,7 @@ polynomial operator +(polynomial const &p, monomial const &m) { return m + p; }
 polynomial operator*(monomial const & m, polynomial const & p)
 {
 	polynomial result;
+	if (m.isZero() || p.isZero()) return result;
 	result.termNumber = p.termNumber;
 	for (int i = 0; i < p.termNumber; i++)
 		result.terms.push_back(m*p.terms[i]);

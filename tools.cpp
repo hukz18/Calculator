@@ -7,6 +7,11 @@ bool isZero(double x)
 	return false;
 }
 
+bool isInteger(double x)
+{
+	return isZero(x - (int)x);
+}
+
 //修正系数为1时stod函数的bug
 double myStod(string const & str)
 {

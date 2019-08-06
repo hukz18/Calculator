@@ -25,7 +25,7 @@ public:
 	monomial (double coefficient, string const &expression) :coefficient(coefficient), expression(expression) {};
 	monomial (monomial const &m) :coefficient(m.coefficient), expression(m.expression) {};
 	void arrange(void);                           //½«±í´ïÊ½°´×ÖÄ¸ÉıĞòÅÅÁĞ
-	bool isZero(void) const { return (coefficient == 0); }
+	bool isZero(void) const { return (tools::isZero(coefficient)); }
 	monomial getCoeff(char var) const;            //»ñÈ¡ÆäÖĞÄ³¸ö×ÖÄ¸µÄÏµÊı
 	vector<char> getVar(void) const;              //»ñÈ¡µ¥ÏîÊ½ÖĞËùº¬×ÖÄ¸
 	monomial *split(void) const;                  //½«µ¥ÏîÊ½ÖĞÖ¸ÊıĞ¡ÓÚÁãµÄÏî²ğ·Ö
@@ -63,6 +63,7 @@ public:
 	polynomial(monomial const &m) { coefficient = 1; termNumber = 1; terms.push_back(m); }  //´Óµ¥ÏîÊ½¹¹Ôì¶àÏîÊ½,ÏîÊıÎª1
 	polynomial(monomial &coefficient, int termNumber, vector<monomial> &terms) :monomial(coefficient), termNumber(termNumber), terms(terms) {};   //¿¼ÂÇÈçºÎÉèÖÃÏµÊıÈ±Ê¡ÖµÎª1
 	bool isZero(void) const;
+	bool isNegative(void) const;           //È·ÈÏ¶àÏîÊ½ÊÇ·ñ"Ğ¡ÓÚÁã"
 	void orderBy(char a);                  //°´×Ö·ûa½µÃİÅÅĞò
 	int getLength(void) const;             //»ñÈ¡Êä³öºó×Ö·û´®µÄ³¤¶È
 	char getMainTerm(void) const;          //»ñÈ¡Ãİ´Î×î¸ßµÄ×ÖÄ¸
@@ -108,7 +109,7 @@ class fraction : public polynomial             //·ÖÊ½Àà£¬¹«ÓĞ¼Ì³Ğ¶àÏîÊ½Àà×÷ÎªÕûÊ
 {
 public:
 	polynomial numerator;
-	polynomial denominator;
+	polynomial denominator=monomial(1);
 public:
 	fraction() { termNumber = 1; terms.push_back(monomial("1")); }
 	fraction(monomial const &m);                                //´Óµ¥ÏîÊ½¹¹Ôì·ÖÊ½,·ÖÄ¸Îª1
@@ -138,5 +139,5 @@ public:
 	friend fraction operator /(polynomial const &p, fraction const &f);              //ÖØÔØ¶àÏîÊ½³ıÒÔ·ÖÊ½
 	friend fraction operator /(fraction const &f, polynomial const &p);              //ÖØÔØ·ÖÊ½³ıÒÔ¶àÏîÊ½
 };
-
+void output(fraction ** const Matrix, int row, int column);         //ÓÃÓÚdebugµÄÊä³ö
 #endif // !symbolize

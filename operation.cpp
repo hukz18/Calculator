@@ -141,7 +141,7 @@ fraction calculate(opExpression exp)
 				int power = pow(calculate(split0).toDigit(), calculate(split2).toDigit());
 				return (fraction(monomial(power)));
 			}
-			else if (calculate(split2).isDigit() && isZero(calculate(split2).toDigit() - (int)calculate(split2).toDigit()))
+			else if (calculate(split2).isDigit() && isInteger(calculate(split2).toDigit()))
 				return myPow(calculate(split0), (int)calculate(split2).toDigit());
 			else cout << "illegal input for '^'!" << endl; return monomial("0");
 		}
