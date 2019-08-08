@@ -142,7 +142,7 @@ bool Elimination(fraction ** Augument, int equ, int var)
 	fraction temp;
 	if (equ < var)//检查方程是否欠定
 	{
-		cout << "The equtions are underdetermined ,please input more equtions and try again!" << endl;
+		cout << "方程组欠定，请输入更多方程" << endl;
 		return false;
 	}
 	for (k = 0; k < var; k++)
@@ -160,14 +160,13 @@ bool Elimination(fraction ** Augument, int equ, int var)
 				}
 		}
 		if (!flag) {
-			cout << "The matrix is single,there's no solution!" << endl;
+			cout << "方程组无解！" << endl;
 			return false;
 		}
 		//将第k行首项划为1
 		temp = Augument[k][k];
 		for (i = k; i <= var; i++)
 			Augument[k][i] = Augument[k][i] / temp;
-		output(Augument, rows, cols);
 		//将第k列其余系数划为0
 		for (i = 0; i < equ; i++)
 		{
@@ -175,7 +174,6 @@ bool Elimination(fraction ** Augument, int equ, int var)
 			temp = Augument[i][k];
 			for (j = k; j <= var; j++)
 				Augument[i][j] = Augument[i][j] +(temp * Augument[k][j]).changeSign();
-			output(Augument, rows, cols);
 		}
 	}
 	if (equ > var)//检查方程是否超定,及是否有解
@@ -187,11 +185,11 @@ bool Elimination(fraction ** Augument, int equ, int var)
 				temp = Augument[i][j] * Augument[j][var] + temp;
 			if (!(temp + Augument[i][var].changeSign()).isZero())
 			{
-				cout << "The equtions are overdeterminated, and there's no sotion!" << endl;
+				cout << "方程组超定，且无解！" << endl;
 				return false;
 			}
 		}
-		cout << "The equtions are overdeterminated, but there's still a sotion!" << endl;
+		cout << "方程组超定，但仍有一组解！" << endl;
 	}
 	return true;
 }
