@@ -50,6 +50,8 @@ int getVariable(vector<string> *var)
 	return var->size();
 }
 
+
+//处理运算顺序，将方程两端化为整式
 void simplize(string & equ)
 {
 	string equL, equR, result;
@@ -165,7 +167,7 @@ bool Elimination(fraction ** Augument, int equ, int var)
 		temp = Augument[k][k];
 		for (i = k; i <= var; i++)
 			Augument[k][i] = Augument[k][i] / temp;
-		output(Augument, 3, 4);
+		output(Augument, rows, cols);
 		//将第k列其余系数划为0
 		for (i = 0; i < equ; i++)
 		{
@@ -173,7 +175,7 @@ bool Elimination(fraction ** Augument, int equ, int var)
 			temp = Augument[i][k];
 			for (j = k; j <= var; j++)
 				Augument[i][j] = Augument[i][j] +(temp * Augument[k][j]).changeSign();
-			output(Augument, 3, 4);
+			output(Augument, rows, cols);
 		}
 	}
 	if (equ > var)//检查方程是否超定,及是否有解

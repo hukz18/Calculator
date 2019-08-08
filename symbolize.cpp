@@ -74,9 +74,15 @@ monomial * monomial::split(void) const
 	string num, denom;
 	for (int i = 0; i < length; i++)
 		if (getPower(expression, i) > 0)
+		{
 			num.append(1, expression[i]);
+			changePower(num, expression[i], getPower(expression, i));
+		}
 		else if (getPower(expression, i) < 0)
+		{
 			denom.append(1, expression[i]);
+			changePower(num, 0, -1 * getPower(expression, i));
+		}
 	split[0].expression = num;
 	split[1].expression = denom;
 	return split;
@@ -520,7 +526,7 @@ fraction polynomial::operator/(polynomial const & p2) const
 	fraction result;
 	result.numerator = this->extraction();
 	result.denominator = p2.extraction();
-	monomial &m1 = result.numerator, &m2 = result.denominator;
+	monomial m1 = result.numerator, m2 = result.denominator;
 	monomial *split = (m1 / m2).split();
 	result.numerator = result.numerator * split[0]; result.denominator = result.denominator *split[1];
 	delete[]split;
@@ -629,7 +635,6 @@ fraction::fraction(monomial const & m)
 	terms.push_back(monomial("1"));
 	numerator = polynomial(m);
 	denominator.termNumber = 1;
-	denominator.terms.push_back(monomial("1"));
 	for (int i = 0; i < m.expression.length(); i++)
 	{
 		int power = getPower(m.expression, i);
@@ -665,7 +670,16 @@ fraction::fraction(polynomial const & p)
 //重载分式输出
 ostream & operator<<(ostream & output, fraction const & f)
 {
-	polynomial const &p = f;
+	if (f.isDigit())
+	{
+		output << f.toDigit() << endl;
+		return output;
+	}
+	else if (f.denominator == polynomial(1))
+	{
+		output << f.numerator << endl;
+		return output;
+	}
 	int l2 = f.numerator.getLength(), l3 = f.denominator.getLength();
 	int d1 = (l2 < l3) ?  ((l3 - l2) / 2)+1 : 0;
 	int d2 = (l3 < l2) ? ((l2 - l3) / 2)+1 : 0;
@@ -744,9 +758,13 @@ void output(fraction ** const Matrix, int row, int column)
 //求幂运算，用于计算"^"操作符
 fraction myPow(fraction const & f, int power)
 {
-	fraction result = f;
-	for (int i = 1; i < power; i++)
-		result = result * f;
+	fraction result = monomial(1);
+	if (power > 0)
+		for (int i = 0; i < power; i++)
+			result = result * f;
+	else if (power < 0)
+		for (int i = 0; i < abs(power); i++)
+			result = result / f;
 	return result;
 }
 

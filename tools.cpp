@@ -7,9 +7,25 @@ bool isZero(double x)
 	return false;
 }
 
+//判定输入合法性
+bool isLegal(char c)
+{
+	if ((isalnum(c) || (isOpe(c)) || (c == '(') || (c == ')') || (c == '=') || (c == ' ') || (c == '\n') || (c == '\0')))
+		return true;
+	else return false;
+}
+
 bool isInteger(double x)
 {
 	return isZero(x - (int)x);
+}
+
+//判断一个字符是否为运算符
+bool isOpe(char c)
+{
+	if (c == '+' || c == '-' || c == '*' || c == '/' || c == '^')
+		return true;
+	else return false;
 }
 
 //修正系数为1时stod函数的bug
@@ -50,6 +66,14 @@ void changeSign(string & str)
 	if (str[0] == '+') str[0] = '-';
 	else if (str[0] == '-') str[0] = '+';
 	else str.insert(0,1, '-');
+}
+
+//获取从当前位置起下一个变量或结尾的位置
+int nextVar(string const & str, int pos)
+{
+	int length = str.length();
+	while (++pos < length&&str[pos] != '+'&&str[pos] != '-'&&str[pos] != '(');
+	return pos;
 }
 
 //获取str[pos]的幂次

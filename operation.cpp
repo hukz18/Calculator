@@ -153,13 +153,7 @@ fraction calculate(opExpression exp)
 	else return monomial(exp.expression);
 }
 
-//判断一个字符是否为运算符
-bool isOpe(char c)
-{
-	if (c == '+' || c == '-' || c == '*' || c == '/' || c == '^')
-		return true;
-	else return false;
-}
+
 
 //判断一个字符(运算符)的优先级
 int prior(char c)
